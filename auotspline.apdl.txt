@@ -690,6 +690,6 @@ SOLVE
 !*STATUS, lowcxstress
 
 
-
+kcjdckdhlkc
 EPLOT   
 /REPLOT
