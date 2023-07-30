@@ -1,0 +1,619 @@
+/PREP7  
+ 
+ET,1,PLANE182   
+
+KEYOPT,1,1,0
+KEYOPT,1,3,1
+KEYOPT,1,6,0
+
+!*  
+!*  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,EX,1,,2e11   
+MPDATA,PRXY,1,,0.3  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,DENS,1,,7800 
+
+!LOCAL,11,1,10,0,0, , , ,1,1,
+!==================================================перечитать задачу==============================
+/PREP7
+LSCLEAR,ALL 
+ACLEAR,1
+ADELE, ALL
+LDELE,All
+KDELE,All
+CSYS,0 
+!дано
+h=0.15 !толщина
+
+R2=5 !наружный радиус сечерия тора
+
+r1=R2-h !внутренний радиус сечерия тора
+
+b=16*R2 !радиус окружности тора
+
+pr=2 !давление
+
+elemcount=119 !число разбиений сетки
+elemcount2=elemcount !
+
+Pi=ACOS(-1)  !число пи
+
+tn = 1000 !техническое число
+
+tn2 = 2000 !техническое число 2
+
+
+!массивы для задачи
+*DIM, lowcXcyl, array, elemcount+1, 3
+*DIM, lowcxstress, array, elemcount+1, 1
+*DIM, highcXcyl, array, elemcount+1, 3
+*DIM, lowcxcorrosion, array, elemcount+1, 3
+*DIM, lownodestress, array, elemcount+1, 7
+
+*DO, i, 0, elemcount,1
+lowcXcyl(i+1,1,1) = Pi/elemcount*i
+lowcXcyl(i+1,2,1) = b+(R2-h)*COS(Pi/elemcount*i)
+lowcXcyl(i+1,3,1) = (R2-h)*SIN( Pi/elemcount*i)
+K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+*ENDDO
+ 
+ 
+nn = (elemcount+1) !выбанное число точек сплайна
+splnn = nn !число точек
+spl = 1
+*DIM, jnset, array,  elemcount+1, 8
+*DIM, jset, array, elemcount+1, nn*2
+*DIM, jxset, array, elemcount+1, nn*2
+*DIM, jyset, array, elemcount+1, nn*2
+*DIM, newcoordset, array, elemcount+1, 2
+ 
+
+!==================================================сплайн1==============================
+
+
+!*DO, i, 0, elemcount/4,1 
+
+!для номера линий
+	*DO, i,1,nn,1
+		jnset(i,1,1)=i-1
+	*ENDDO
+
+jnset(1,2,1)=1
+jnset(2,2,1)=1
+
+!факториал номеров точек
+	*DO, i,1,nn-2,1
+		jnset(i+2,2,1)=jnset(i+1,2,1)*jnset(i+2,1,1)
+	*ENDDO
+	!порядковые номера точек
+	*DO, i,1,nn,1
+		jnset(i,3,1)=jnset(i,1,1)+1
+	*ENDDO
+
+
+!факториал числа точек
+jnset(1,4,1)=1
+
+
+	*DO, i,1,nn-1,1
+		jnset(i+1,4,1)=jnset(i,4,1)*jnset(i+1,3,1)
+	*ENDDO
+	!разность номеров точек и линий
+	*DO, i,1,nn,1
+		*SET,jnset(i,5,1),jnset(nn,1,1)- jnset(i,1,1)
+	*ENDDO  
+	
+!факториал разности точек и линий
+jnset(nn,6,1)=1
+jnset(nn-1,6,1)=1
+
+
+	*DO, i,1,nn-2,1
+		jnset(nn-1-i,6,1)=jnset(nn-i,6,1)*jnset(nn-1-i,5,1)
+	*ENDDO
+
+
+!формула для n_i
+
+	*DO, i,1,nn,1
+		jnset(i,7,1)=jnset(nn,2,1)/(jnset(i,2,1)*jnset(i,6,1))
+	*ENDDO
+
+!набор t
+	*DO, i2,1,splnn,1
+		jset(i2,1,1)=(i2-1)/(splnn-1)
+	*ENDDO
+
+
+
+	*DO, i3,2,nn+1,1
+		*DO, i2,1,splnn,1
+			jset(i2,i3,1)= jnset(i3-1,7,1)*jset(i2,1,1)**(i3-2)*(1-jset(i2,1,1))**(jnset(nn,1,1)-(i3-2))
+		*ENDDO
+	*ENDDO
+
+jset(1,2,1)=1
+jset(splnn,nn+1,1)=1
+
+!==================================================cnh==============================
+
+spl1=0
+	*DO,spl, 0, spl1,1
+		 *DO, i,1,nn,1
+			*DO,i2,1,splnn,1
+			jxset(i2+nn*spl,i,1)=jset(i2,i+1,1)*lowcXcyl(i+nn*spl,2,1)
+			jyset(i2+nn*spl,i,1)=jset(i2,i+1,1)*lowcXcyl(i+nn*spl,3,1)
+			*ENDDO
+		*ENDDO
+
+		*DO,i2,1,splnn,1
+			jxset(i2+nn*spl,nn+1,1)=0
+			jyset(i2+nn*spl,nn+1,1)=0
+		*ENDDO
+
+		*DO,i2,1,splnn,1
+			*DO, i,1,nn,1	
+				jxset(i2+nn*spl,nn+1,1)=jxset(i2+nn*spl,nn+1,1)+jxset(i2+nn*spl,i,1)
+				jyset(i2+nn*spl,nn+1,1)=jyset(i2+nn*spl,nn+1,1)+jyset(i2+nn*spl,i,1)	
+			*ENDDO
+		*ENDDO
+
+
+		*DO,i2,1,splnn,1
+			newcoordset(i2+nn*spl,1,1)=jxset(i2+nn*spl,nn+1,1)
+			newcoordset(i2+nn*spl,2,1)=jyset(i2+nn*spl,nn+1,1)
+		*ENDDO
+
+		*DO,i2,1,splnn,1
+			K,tn2+i2+nn*spl,newcoordset(i2+nn*spl,1,1),newcoordset(i2+nn*spl,2,1),0
+		*ENDDO 
+	*ENDDO 
+ !===============
+ 
+ !Write Spline Macro
+spl_ine1.mac
+	*cfopen,spl_ine1,mac
+	*cfwrite,FLST,3,(elemcount+1),3
+	  *do,i_,1+tn2,nn+tn2
+		*cfwrite,FITEM,3,i_  
+	  *enddo
+	*cfwrite,BSPLIN, ,P51X   
+	*cfclose
+
+
+ 
+
+	*DO, i, 0, elemcount,1
+		highcXcyl(i+1,1,1) = Pi/elemcount*i
+		highcXcyl(i+1,2,1) = b+R2*COS(Pi/elemcount*i)
+		highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
+		K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+	*ENDDO 
+
+	*cfopen,spl_ineR1,mac
+	*cfwrite,FLST,3,(elemcount)/4,3
+		  *do,iR_,tn+1,tn+nn/4
+			*cfwrite,FITEM,3,iR_  
+		  *enddo
+	  *cfwrite,BSPLIN, ,P51X   
+	*cfclose
+
+!Spline with n_ points
+spl_ineR1.mac
+
+!Write Spline Macro
+	*cfopen,spl_ineR2,mac
+	*cfwrite,FLST,3,(elemcount)/4+1,3
+		  *do,iR2_,tn+nn/4,tn+2*nn/4
+			*cfwrite,FITEM,3,iR2_  
+		  *enddo
+	  *cfwrite,BSPLIN, ,P51X   
+	*cfclose
+
+!Spline with n_ points
+spl_ineR2.mac
+
+
+!Write Spline Macro
+	*cfopen,spl_ineR3,mac
+	*cfwrite,FLST,3,(elemcount)/4+1,3
+		  *do,iR3_,tn+2*nn/4,tn+3*nn/4
+			*cfwrite,FITEM,3,iR3_  
+		  *enddo
+	  *cfwrite,BSPLIN, ,P51X   
+	*cfclose
+
+!Spline with n_ points
+spl_ineR3.mac
+
+!Write Spline Macro
+	*cfopen,spl_ineR4,mac
+	*cfwrite,FLST,3,(elemcount)/4+1,3
+		  *do,iR4_,tn+3*nn/4,tn+4*nn/4
+			*cfwrite,FITEM,3,iR4_  
+		  *enddo
+	  *cfwrite,BSPLIN, ,P51X   
+	*cfclose
+
+!Spline with n_ points
+spl_ineR4.mac
+
+
+
+LSTR, 1+tn2, 1+tn
+LSTR, elemcount+1+tn2, elemcount+1+tn
+!LESIZE,ALL, , ,1, , , , ,1 
+LESIZE,1, , ,(elemcount+1), , , , ,1 
+LESIZE,2, , ,(elemcount+1)/4, , , , ,1 
+LESIZE,3, , ,(elemcount+1)/4, , , , ,1 
+LESIZE,4, , ,(elemcount+1)/4, , , , ,1 
+LESIZE,5, , ,(elemcount+1)/4, , , , ,1 
+LESIZE,6, , ,1, , , , ,1 
+LESIZE,7, , ,1, , , , ,1 
+
+AL,ALL
+AMESH,1
+
+!ESEL, S, STRA, Comp, 1, VMAX, VINC, KABS
+
+LOCAL,112,1,b,0,0, , , ,1,1,
+NROTAT,ALL
+LSCLEAR,ALL 
+!*DO, i, 1, elemcount,1
+SFL,1,PRES,pr,
+! SFL,2,PRES,pr,
+! SFL,3,PRES,pr,
+! SFL,4,PRES,pr,
+!SFE, Elem, LKEY, PRES, 0, pr, 
+!*ENDDO
+
+DL,6,1, UY, ,  
+DL,7,1, UY, ,  
+
+!D,1,UY, , , , , , , , , ,
+!D,elemcount+1,UY, , , , , , , , , ,
+!D,elemcount+2,UY, , , , , , , , , ,
+!D,2*elemcount+2,UY, , , , , , , , , ,
+
+CSYS,0 
+CSYS,112
+
+FINISH  
+/SOL
+!/STATUS,SOLU
+SOLVE
+/Post1
+RSYS,112
+
+!===============================================файлы===============================================
+
+/DELETE, D:\stressatnodes, txt
+/DELETE, D:\thickdepStress, txt
+
+
+*CREATE,ansuitmp11
+*CFOPEN, 'D:\solidresstress', txt,,append
+*VWRITE,maxstress,,,, , ,, ,,, , , , ,, , , ,
+(f10.4)
+*CFCLOS
+*END
+
+*CREATE,ansuitmp12
+*MWRITE,lowcxcorrosion, D:\solidthicarray1231231, txt,, JIK, 2,
+(2F10.4)
+*CFCLOS
+*END
+
+
+*CREATE,ansuitmp13
+*CFOPEN, 'D:\thickdepThick', txt,,append
+*VWRITE,DEPminthicX,DEPminthicY,,, , ,, ,,, , , , ,, , , ,
+(2f10.4)
+*CFCLOS
+*END
+
+*CREATE,ansuitmp14
+*CFOPEN, 'D:\thickdepStress', txt,,append
+*VWRITE,t1,DEPmaxstress,,, , ,, ,,, , , , ,, , , ,
+(2f10.4)
+*CFCLOS
+*END
+
+*CREATE,ansuitmp16
+*CFOPEN, 'D:\stressatnodes', txt,,append
+*VWRITE,t1,maxstress61, ,,, , , , ,, , , ,
+(2f10.4)
+*CFCLOS
+*END
+!================================цикл===============================================
+!*DO, h, 1.5,2, 0.1
+
+	*DO, t1, 0, 3.5, 0.02
+		FINISH  
+		/SOL
+		!/STATUS,SOLU
+
+		SOLVE
+		/POST1
+		RSYS,112
+		*DO, i, 0, elemcount,1
+
+		*GET, lowcxstress(i+1,1,1), NODE, i+1, S,Y
+		*ENDDO
+
+		*DO, i, 0, elemcount, 1
+			lowcxcorrosion(i+1,1,1) = Pi/elemcount*i
+			lowcxcorrosion(i+1,2,1) = b+((R2-h)+(0.1+(lowcxstress(i+1,1,1))*0.0005)*t1)*COS(Pi/elemcount*i)
+			lowcxcorrosion(i+1,3,1) = ((R2-h)+(0.1+(lowcxstress(i+1,1,1))*0.0005)*t1)*SIN(Pi/elemcount*i)
+		*ENDDO
+
+
+		/PREP7
+		LSCLEAR,ALL 
+		ACLEAR,1
+		ADELE, ALL
+		LDELE,All
+		KDELE,All
+		CSYS,0 
+
+		*DO, i, 0, elemcount,1
+			K,i+1,lowcxcorrosion(i+1,2,1),lowcxcorrosion(i+1,3,1),0,
+		*ENDDO 
+
+
+		!*DO, i, 0, elemcount/4,1 
+
+		!для номера линий
+		*DO, i,1,nn,1
+			jnset(i,1,1)=i-1
+		*ENDDO
+
+		jnset(1,2,1)=1
+		jnset(2,2,1)=1
+
+		!факториал номеров точек
+		*DO, i,1,nn-2,1
+			jnset(i+2,2,1)=jnset(i+1,2,1)*jnset(i+2,1,1)
+		*ENDDO
+		!порядковые номера точек
+		*DO, i,1,nn,1
+			jnset(i,3,1)=jnset(i,1,1)+1
+		*ENDDO
+
+
+		!факториал числа точек
+		jnset(1,4,1)=1
+
+
+		*DO, i,1,nn-1,1
+			jnset(i+1,4,1)=jnset(i,4,1)*jnset(i+1,3,1)
+		*ENDDO
+		!разность номеров точек и линий
+		*DO, i,1,nn,1
+			*SET,jnset(i,5,1),jnset(nn,1,1)- jnset(i,1,1)
+		*ENDDO  
+			
+		!факториал разности точек и линий
+		jnset(nn,6,1)=1
+		jnset(nn-1,6,1)=1
+
+
+		*DO, i,1,nn-2,1
+			jnset(nn-1-i,6,1)=jnset(nn-i,6,1)*jnset(nn-1-i,5,1)
+		*ENDDO
+
+
+		!формула для n_i
+
+		*DO, i,1,nn,1
+			jnset(i,7,1)=jnset(nn,2,1)/(jnset(i,2,1)*jnset(i,6,1))
+		*ENDDO
+
+	!набор t
+		*DO, i2,1,splnn,1
+			jset(i2,1,1)=(i2-1)/(splnn-1)
+		*ENDDO
+
+
+
+		*DO, i3,2,nn+1,1
+			*DO, i2,1,splnn,1
+				jset(i2,i3,1)= jnset(i3-1,7,1)*jset(i2,1,1)**(i3-2)*(1-jset(i2,1,1))**(jnset(nn,1,1)-(i3-2))
+			*ENDDO
+		*ENDDO
+
+		jset(1,2,1)=1
+		jset(splnn,nn+1,1)=1
+
+		!==================================================cnh==============================
+
+		spl1=0
+		*DO,spl, 0, spl1,1
+			 *DO, i,1,nn,1
+				*DO,i2,1,splnn,1
+					jxset(i2+nn*spl,i,1)=jset(i2,i+1,1)*lowcxcorrosion(i+nn*spl,2,1)
+					jyset(i2+nn*spl,i,1)=jset(i2,i+1,1)*lowcxcorrosion(i+nn*spl,3,1)
+				*ENDDO
+			*ENDDO
+
+			*DO,i2,1,splnn,1
+				jxset(i2+nn*spl,nn+1,1)=0
+				jyset(i2+nn*spl,nn+1,1)=0
+			*ENDDO
+
+			*DO,i2,1,splnn,1
+				*DO, i,1,nn,1	
+					jxset(i2+nn*spl,nn+1,1)=jxset(i2+nn*spl,nn+1,1)+jxset(i2+nn*spl,i,1)
+					jyset(i2+nn*spl,nn+1,1)=jyset(i2+nn*spl,nn+1,1)+jyset(i2+nn*spl,i,1)	
+				*ENDDO
+			*ENDDO
+
+
+			*DO,i2,1,splnn,1
+				newcoordset(i2+nn*spl,1,1)=jxset(i2+nn*spl,nn+1,1)
+				newcoordset(i2+nn*spl,2,1)=jyset(i2+nn*spl,nn+1,1)
+			*ENDDO
+
+			*DO,i2,1,splnn,1
+				K,tn2+i2+nn*spl,newcoordset(i2+nn*spl,1,1),newcoordset(i2+nn*spl,2,1),0
+			*ENDDO 
+		*ENDDO 
+		 !===============
+
+	 !Write Spline Macro
+		*cfopen,spl_ine1,mac
+		*cfwrite,FLST,3,(elemcount+1),3
+		  *do,i_,1+tn2,nn+tn2
+			*cfwrite,FITEM,3,i_  
+		  *enddo
+		*cfwrite,BSPLIN, ,P51X   
+		*cfclose
+
+		!Spline with n_ points
+		spl_ine1.mac
+
+
+		*DO, i, 0, elemcount,1
+			highcXcyl(i+1,1,1) = Pi/elemcount*i
+			highcXcyl(i+1,2,1) = b+R2*COS(Pi/elemcount*i)
+			highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
+			K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+		*ENDDO 
+
+		*cfopen,spl_ineR1,mac
+		*cfwrite,FLST,3,(elemcount)/4,3
+			  *do,iR_,tn+1,tn+nn/4
+				*cfwrite,FITEM,3,iR_  
+			  *enddo
+		  *cfwrite,BSPLIN, ,P51X   
+		*cfclose
+
+		!Spline with n_ points
+		spl_ineR1.mac
+
+		!Write Spline Macro
+		*cfopen,spl_ineR2,mac
+		*cfwrite,FLST,3,(elemcount)/4+1,3
+			  *do,iR2_,tn+nn/4,tn+2*nn/4
+				*cfwrite,FITEM,3,iR2_  
+			  *enddo
+		  *cfwrite,BSPLIN, ,P51X   
+		*cfclose
+
+		!Spline with n_ points
+		spl_ineR2.mac
+
+
+		!Write Spline Macro
+		*cfopen,spl_ineR3,mac
+		*cfwrite,FLST,3,(elemcount)/4+1,3
+			  *do,iR3_,tn+2*nn/4,tn+3*nn/4
+				*cfwrite,FITEM,3,iR3_  
+			  *enddo
+		  *cfwrite,BSPLIN, ,P51X   
+		*cfclose
+
+		!Spline with n_ points
+		spl_ineR3.mac
+
+		!Write Spline Macro
+		*cfopen,spl_ineR4,mac
+		*cfwrite,FLST,3,(elemcount)/4+1,3
+			  *do,iR4_,tn+3*nn/4,tn+4*nn/4
+				*cfwrite,FITEM,3,iR4_  
+			  *enddo
+		  *cfwrite,BSPLIN, ,P51X   
+		*cfclose
+
+		!Spline with n_ points
+		spl_ineR4.mac
+
+
+
+		LSTR, 1+tn2, 1+tn
+		LSTR, elemcount+1+tn2, elemcount+1+tn
+		!LESIZE,ALL, , ,1, , , , ,1 
+		LESIZE,1, , ,(elemcount+1), , , , ,1 
+		LESIZE,2, , ,(elemcount+1)/4, , , , ,1 
+		LESIZE,3, , ,(elemcount+1)/4, , , , ,1 
+		LESIZE,4, , ,(elemcount+1)/4, , , , ,1 
+		LESIZE,5, , ,(elemcount+1)/4, , , , ,1 
+		LESIZE,6, , ,1, , , , ,1 
+		LESIZE,7, , ,1, , , , ,1 
+
+		! LESIZE,6, , ,(elemcount+1), , , , ,1 
+		! LESIZE,7, , ,(elemcount+1), , , , ,1 
+		! LESIZE,8, , ,(elemcount+1), , , , ,1 
+		AL,ALL
+		AMESH,1
+
+		!ESEL, S, STRA, Comp, 1, VMAX, VINC, KABS
+
+		LOCAL,112,1,b,0,0, , , ,1,1,
+		NROTAT,ALL
+		LSCLEAR,ALL 
+		!*DO, i, 1, elemcount,1
+		SFL,1,PRES,pr,
+		! SFL,2,PRES,pr,
+		! SFL,3,PRES,pr,
+		! SFL,4,PRES,pr,
+		!SFE, Elem, LKEY, PRES, 0, pr, 
+		!*ENDDO
+
+		DL,6,1, UY, ,  
+		DL,7,1, UY, ,  
+
+
+
+		!D,1,UY, , , , , , , , , ,
+		!D,elemcount+1,UY, , , , , , , , , ,
+		!D,elemcount+2,UY, , , , , , , , , ,
+		!D,2*elemcount+2,UY, , , , , , , , , ,
+		!переходим в обычную СК и решаем
+		CSYS,0 
+		FINISH  
+		/SOL
+		!/STATUS,SOLU
+		SOLVE
+		*VSCFUN, DEPmaxstress, MAX, lowcxstress(1,1)
+		*use, ansuitmp14
+
+
+		*GET, maxstress, NODE, 2, S,Y
+		*use, ansuitmp11
+
+
+
+		*GET, maxstress61, NODE, 2, S,Y
+		*use, ansuitmp16
+
+
+
+		*use,ansuitmp12
+
+
+	*ENDDO
+
+!проверяем сетку
+!EPLOT   
+!/REPLOT
+
+!DEPminthicX= lowcxcorrosion(31,2,1)
+!DEPminthicY = lowcxcorrosion(31,3,1)
+!*use, ansuitmp13
+
+!*GET, DEPmaxstress, NODE, 31, S,X
+!*use, ansuitmp14
+
+!*ENDDO
+
+
+!*STATUS, lowcxstress
+
+
+
+EPLOT   
+/REPLOT
