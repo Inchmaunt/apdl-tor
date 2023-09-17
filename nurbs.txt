@@ -1,0 +1,255 @@
+/PREP7  
+ 
+ET,1,PLANE182   
+
+KEYOPT,1,1,0
+KEYOPT,1,3,1
+KEYOPT,1,6,0
+
+!*  
+!*  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,EX,1,,2e11   
+MPDATA,PRXY,1,,0.3  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,DENS,1,,7800 
+
+!==================================================перечитать задачу==============================
+/PREP7
+LSCLEAR,ALL 
+ACLEAR,1
+ADELE, ALL
+LDELE,All
+KDELE,All
+CSYS,0 
+!дано
+h=0.15 !толщина
+
+R2=5 !наружный радиус сечерия тора
+
+r1=R2-h !внутренний радиус сечерия тора
+
+b=16*R2 !радиус окружности тора
+
+pr=2 !давление
+
+elemcount=29 !число разбиений сетки
+elemcount2=elemcount !
+
+Pi=ACOS(-1)  !число пи
+
+tn = 1000 !техническое число
+
+tn2 = 2000 !техническое число 2
+
+
+!массивы для задачи
+*DIM, lowcXcyl, array, elemcount+1, 3
+*DIM, lowcxstress, array, elemcount+1, 1
+*DIM, highcXcyl, array, elemcount+1, 3
+*DIM, lowcxcorrosion, array, elemcount+1, 3
+*DIM, lownodestress, array, elemcount+1, 7
+
+*DO, i, 0, elemcount,1
+lowcXcyl(i+1,1,1) = Pi/elemcount*i
+lowcXcyl(i+1,2,1) = b+(R2-h)*COS(Pi/elemcount*i)
+lowcXcyl(i+1,3,1) = (R2-h)*SIN( Pi/elemcount*i)
+K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+*ENDDO
+ 
+ 
+nn = (elemcount+1) !выбанное число точек сплайна
+splnn = nn !число точек
+spl = 1
+*DIM, jnset, array,  elemcount+1, 8
+*DIM, jset, array, elemcount+1, nn*2
+*DIM, jxset, array, elemcount+1, nn*2
+*DIM, jyset, array, elemcount+1, nn*2
+*DIM, newcoordset, array, elemcount+1, 2
+ 
+
+!==================================================сплайн1==============================
+
+
+!*DO, i, 0, elemcount/4,1 
+
+!для номера линий
+	*DO, i,1,nn,1
+		jnset(i,1,1)=i-1
+	*ENDDO
+
+jnset(1,2,1)=1
+jnset(2,2,1)=1
+
+!факториал номеров точек
+	*DO, i,1,nn-2,1
+		jnset(i+2,2,1)=jnset(i+1,2,1)*jnset(i+2,1,1)
+	*ENDDO
+	!порядковые номера точек
+	*DO, i,1,nn,1
+		jnset(i,3,1)=jnset(i,1,1)+1
+	*ENDDO
+
+
+!факториал числа точек
+jnset(1,4,1)=1
+
+
+	*DO, i,1,nn-1,1
+		jnset(i+1,4,1)=jnset(i,4,1)*jnset(i+1,3,1)
+	*ENDDO
+	!разность номеров точек и линий
+	*DO, i,1,nn,1
+		*SET,jnset(i,5,1),jnset(nn,1,1)- jnset(i,1,1)
+	*ENDDO  
+	
+!факториал разности точек и линий
+jnset(nn,6,1)=1
+jnset(nn-1,6,1)=1
+
+
+	*DO, i,1,nn-2,1
+		jnset(nn-1-i,6,1)=jnset(nn-i,6,1)*jnset(nn-1-i,5,1)
+	*ENDDO
+
+
+!формула для n_i
+
+	*DO, i,1,nn,1
+		jnset(i,7,1)=jnset(nn,2,1)/(jnset(i,2,1)*jnset(i,6,1))
+	*ENDDO
+
+!набор t
+	*DO, i2,1,splnn,1
+		jset(i2,1,1)=(i2-1)/(splnn-1)
+	*ENDDO
+
+
+
+	*DO, i3,2,nn+1,1
+		*DO, i2,1,splnn,1
+			jset(i2,i3,1)= jnset(i3-1,7,1)*jset(i2,1,1)**(i3-2)*(1-jset(i2,1,1))**(jnset(nn,1,1)-(i3-2))
+		*ENDDO
+	*ENDDO
+
+jset(1,2,1)=1
+jset(splnn,nn+1,1)=1
+
+!==================================================cnh==============================
+
+spl1=0
+	*DO,spl, 0, spl1,1
+		 *DO, i,1,nn,1
+			*DO,i2,1,splnn,1
+			jxset(i2+nn*spl,i,1)=jset(i2,i+1,1)*lowcXcyl(i+nn*spl,2,1)
+			jyset(i2+nn*spl,i,1)=jset(i2,i+1,1)*lowcXcyl(i+nn*spl,3,1)
+			*ENDDO
+		*ENDDO
+
+		*DO,i2,1,splnn,1
+			jxset(i2+nn*spl,nn+1,1)=0
+			jyset(i2+nn*spl,nn+1,1)=0
+		*ENDDO
+
+		*DO,i2,1,splnn,1
+			*DO, i,1,nn,1	
+				jxset(i2+nn*spl,nn+1,1)=jxset(i2+nn*spl,nn+1,1)+jxset(i2+nn*spl,i,1)
+				jyset(i2+nn*spl,nn+1,1)=jyset(i2+nn*spl,nn+1,1)+jyset(i2+nn*spl,i,1)	
+			*ENDDO
+		*ENDDO
+
+
+		*DO,i2,1,splnn,1
+			newcoordset(i2+nn*spl,1,1)=jxset(i2+nn*spl,nn+1,1)
+			newcoordset(i2+nn*spl,2,1)=jyset(i2+nn*spl,nn+1,1)
+		*ENDDO
+
+		*DO,i2,1,splnn,1
+			K,tn2+i2+nn*spl,newcoordset(i2+nn*spl,1,1),newcoordset(i2+nn*spl,2,1),0
+		*ENDDO 
+	*ENDDO 
+ !===============
+
+
+
+!  !===============Узловой вектор ===============
+! kk = 2 !степень     k
+! n_v = elemcount ! число прямых участков n
+! vecleng = kk + n_v + 1 ! длина узлового вектора
+! *DIM, opennodevector, array, vecleng, 1
+
+! *DO, i, 1, vecleng, 1 
+!     *IF, i, LE, kk, AND, i, GE, 1, THEN ! участок под нули
+!     opennodevector(i,1,1) = 0
+!     *ELSE
+!     *ENDIF
+
+!     *IF, i, LE, n_v + 1, AND, i, GE, kk + 1, THEN ! участок под счет
+!     opennodevector(i,1,1) = i-kk
+!     *ELSE
+!     *ENDIF
+
+!      *IF, i, LE, vecleng, AND, i, GE, n_v + 2, THEN ! участок под финал
+!     opennodevector(i,1,1) = n_v - kk + 2
+!     *ELSE
+!     *ENDIF
+! *ENDDO
+
+
+ !=============== Новый узловой вектор ===============
+kk = 2 !степень k
+n_v = elemcount ! число прямых участков n
+vecleng = kk + n_v! длина узлового вектора
+*DIM, opennodevector, array, vecleng, 1
+*DIM, horda_c, array, elemcount+1, 4
+
+*DO, i, 1, elemcount,1
+horda_c(i+1,1,1) = lowcXcyl(i+1,2,1)-lowcXcyl(i,2,1)
+horda_c(i+1,2,1) = lowcXcyl(i+1,3,1)-lowcXcyl(i,3,1)
+horda_c(i+1,3,1) = (horda_c(i+1,1,1)**2 + horda_c(i+1,2,1)**2)**0.5
+horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
+*ENDDO
+
+*DO, i, 1, vecleng, 1 
+    *IF, i, LE, kk, AND, i, GE, 1, THEN ! участок под нули
+    opennodevector(i,1,1) = 0
+    *ELSE
+    *ENDIF
+
+    *IF, i, LE, n_v - kk + 1, AND, i, GE, 1, THEN ! участок под счет
+    opennodevector(i+kk,1,1) = (((i/(n_v-kk+2))*horda_c(i+2,3,1) + horda_c(i+1,4,1))/horda_c(elemcount+1,4,1))*(n_v-kk+2)
+    *ELSE
+    *ENDIF
+
+     *IF, i, LE, vecleng, AND, i, GE, n_v + 1, THEN ! участок под финал
+    opennodevector(i,1,1) = n_v - kk + 2
+    *ELSE
+    *ENDIF
+*ENDDO
+
+!=============== Функции базиса N ===============
+
+*DIM, basis_n, array, elemcount, kk
+
+tt = opennodevector(1+kk,1,1)-opennodevector(kk,1,1)
+ttt = opennodevector(kk,1,1)
+
+*DO, i, 1, elemcount, 1 
+    *IF, tt, LT, opennodevector(i+1,1,1), AND, tt, GE, opennodevector(i,1,1), THEN
+    basis_n(i,1,1) = 1
+    *ELSE
+    basis_n(i,1,1) = 0
+    *ENDIF
+*ENDDO
+
+*DO, i, 1, elemcount, 1
+    *DO, j, 1+1, kk, 1
+        *IF, opennodevector(i+j,1,1)-opennodevector(i,1,1), EQ, 0, OR, opennodevector(i+j,1,1) - opennodevector(i+1,1,1), EQ, 0, THEN
+        basis_n(i,j,1) = 0
+        *ELSE
+        basis_n(i,j,1)=(basis_n(i,j-1,1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+j,1,1)-opennodevector(i,1,1))) +((((opennodevector(i+j,1,1)-ttt))*basis_n(i+1,j-1,1)) / (opennodevector(i+j,1,1) - opennodevector(i+1,1,1)))
+    *ENDDO
+*ENDDO
+вавава
