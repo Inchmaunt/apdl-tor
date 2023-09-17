@@ -171,7 +171,7 @@ jset(splnn,nn+1,1)=1
 ! *DO,i2,1,splnn,1
 ! K,100+i2,newcoordset(i2,1,1),newcoordset(i2,2,1),0
 ! *ENDDO 
-!===============
+ !===============
 spl1=3
 	*DO,spl, 0, spl1,1
 		 *DO, i,1,nn,1
@@ -688,6 +688,7 @@ SOLVE
 
 
 !*STATUS, lowcxstress
+
 
 
 EPLOT   
