@@ -36,7 +36,7 @@ b=16*R2 !радиус окружности тора
 
 pr=2 !давление
 
-elemcount=29 !число разбиений сетки
+elemcount=12 !число разбиений сетки
 elemcount2=elemcount !
 
 Pi=ACOS(-1)  !число пи
@@ -202,8 +202,8 @@ spl1=0
  !=============== Новый узловой вектор ===============
 kk = 2 !степень k
 n_v = elemcount ! число прямых участков n
-vecleng = kk + n_v! длина узлового вектора
-hh=1 ! Вес кривой
+vecleng = kk + n_v + 1! длина узлового вектора
+hh = 2 ! Вес кривой
 
 
 *DIM, opennodevector, array, vecleng, 1
@@ -233,33 +233,33 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
     *ENDIF
 *ENDDO
 
-! !=============== Функции базиса N ===============
+! ! !=============== Функции базиса N ===============
 
-*DIM, basis_n, array, elemcount, kk*elemcount
-tt = opennodevector(1+kk,1,1)-opennodevector(kk,1,1)
-ttt = opennodevector(kk,1,1)
+! *DIM, basis_n, array, elemcount, kk*elemcount
+! tt = opennodevector(1+kk,1,1)-opennodevector(kk,1,1)
+! ttt = opennodevector(kk,1,1)
 
-*DO, i, 1, elemcount, 1 
-	*IF, tt, LT, opennodevector(i+1,1,1), AND, tt, GE, opennodevector(i,1,1), THEN
-	basis_n(i,1,1) = 1
-	*ELSE
-	basis_n(i,1,1) = 0
-	*ENDIF
-*ENDDO
+! *DO, i, 1, elemcount, 1 
+! 	*IF, tt, LT, opennodevector(i+1,1,1), AND, tt, GE, opennodevector(i,1,1), THEN
+! 	basis_n(i,1,1) = 1
+! 	*ELSE
+! 	basis_n(i,1,1) = 0
+! 	*ENDIF
+! *ENDDO
 
-*DO, i, 1, elemcount, 1
-	*DO, j, 1+1, kk, 1
-		*IF, opennodevector(i+j,1,1)-opennodevector(i,1,1), EQ, 0, OR, opennodevector(i+j,1,1) - opennodevector(i+1,1,1), EQ, 0, THEN
-		basis_n(i,j,1) = 0
-		*ELSE
-		basis_n(i,j,1)=(basis_n(i,j-1,1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+j,1,1)-opennodevector(i,1,1))) +((((opennodevector(i+j,1,1)-ttt))*basis_n(i+1,j-1,1)) / (opennodevector(i+j,1,1) - opennodevector(i+1,1,1)))
-	*ENDDO
-*ENDDO
+! *DO, i, 1, elemcount, 1
+! 	*DO, j, 1+1, kk, 1
+! 		*IF, opennodevector(i+j,1,1)-opennodevector(i,1,1), EQ, 0, OR, opennodevector(i+j,1,1) - opennodevector(i+1,1,1), EQ, 0, THEN
+! 		basis_n(i,j,1) = 0
+! 		*ELSE
+! 		basis_n(i,j,1)=(basis_n(i,j-1,1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+j,1,1)-opennodevector(i,1,1))) +((((opennodevector(i+j,1,1)-ttt))*basis_n(i+1,j-1,1)) / (opennodevector(i+j,1,1) - opennodevector(i+1,1,1)))
+! 	*ENDDO
+! *ENDDO
 
 
 !=============== Функции базиса N цикл  ===============
 
-*DIM, basis_n, array, elemcount, kk*elemcount
+*DIM, basis_n, array, vecleng-kk, kk*elemcount
 *DO, mm, kk, elemcount, 1
     tt = opennodevector(mm+1,1,1)
     ttt = opennodevector(mm,1,1)
@@ -280,7 +280,7 @@ ttt = opennodevector(kk,1,1)
 		*IF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, OR, opennodevector(i+kk,1,1) - opennodevector(i+1,1,1), EQ, 0, THEN
 		basis_n(i,j,1) = 0
 		*ELSE
-		basis_n(i,j,1)=(basis_n(i,kk-1,1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1))) +((((opennodevector(i+kk,1,1)-ttt))*basis_n(i+1,kk-1,1)) / (opennodevector(i+kk,1,1) - opennodevector(i+1,1,1)))
+		basis_n(i,j,1)=(basis_n(i,j-elemcount,1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1))) +((((opennodevector(i+kk,1,1)-ttt))*basis_n(i+1,j-elemcount,1)) / (opennodevector(i+kk,1,1) - opennodevector(i+1,1,1)))
 		*ENDIF
 	*ENDDO
 *ENDDO
@@ -288,10 +288,31 @@ ttt = opennodevector(kk,1,1)
 	
 !=============== Весовой вектор h  ===============
 
-*DIM, VECTOR_H, ARRAY, ELEMCOUNT+1,1
+*DIM, VECTOR_H, ARRAY,1, ELEMCOUNT+1
 *DO,i, 1, ELEMCOUNT+1,1
-	*IF, I, EQ, (ELEMCOUNT/2)+1, THEN
-	VECTOR_H(I,1,1)=hh
+	*IF, i, EQ, (ELEMCOUNT/2)+1, THEN
+	VECTOR_H(1,i,1)=hh
 	*ELSE
-	VECTOR_H(I,1,1)=1
-*ENDIF
+	VECTOR_H(1,i,1)=1
+	*ENDIF
+*ENDDO
+
+!=============== Умножение весового вектора h на компонент базиса N и суммирование ===============
+
+*DIM, Sn, ARRAY, vecleng-kk, elemcount
+*DO, j, 1, elemcount, 1	
+	*DO, i, 1, elemcount+1, 1
+		Sn(i,j,1) = VECTOR_H(1,j,1)*basis_n(i,(kk-1)*elemcount+j,1) 
+	*ENDDO
+*ENDDO
+
+
+*DIM, SnSUM, ARRAY, vecleng-kk, elemcount
+*DO, j, 1, elemcount, 1	
+	*DO, i, 1, elemcount-1, 1
+		SnSUM(i,j+1,1) = SnSUM(i,j,1)+Sn(i,j+1,1)
+	*ENDDO
+*ENDDO
+
+!=============== Компоненты вектора R ===============
+
