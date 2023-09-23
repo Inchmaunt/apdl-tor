@@ -71,109 +71,6 @@ spl = 1
 *DIM, newcoordset, array, elemcount+1, 2
  
 
-! !==================================================сплайн1==============================
-
-
-! !*DO, i, 0, elemcount/4,1 
-
-! !для номера линий
-! 	*DO, i,1,nn,1
-! 		jnset(i,1,1)=i-1
-! 	*ENDDO
-
-! jnset(1,2,1)=1
-! jnset(2,2,1)=1
-
-! !факториал номеров точек
-! 	*DO, i,1,nn-2,1
-! 		jnset(i+2,2,1)=jnset(i+1,2,1)*jnset(i+2,1,1)
-! 	*ENDDO
-! 	!порядковые номера точек
-! 	*DO, i,1,nn,1
-! 		jnset(i,3,1)=jnset(i,1,1)+1
-! 	*ENDDO
-
-
-! !факториал числа точек
-! jnset(1,4,1)=1
-
-
-! 	*DO, i,1,nn-1,1
-! 		jnset(i+1,4,1)=jnset(i,4,1)*jnset(i+1,3,1)
-! 	*ENDDO
-! 	!разность номеров точек и линий
-! 	*DO, i,1,nn,1
-! 		*SET,jnset(i,5,1),jnset(nn,1,1)- jnset(i,1,1)
-! 	*ENDDO  
-	
-! !факториал разности точек и линий
-! jnset(nn,6,1)=1
-! jnset(nn-1,6,1)=1
-
-
-! 	*DO, i,1,nn-2,1
-! 		jnset(nn-1-i,6,1)=jnset(nn-i,6,1)*jnset(nn-1-i,5,1)
-! 	*ENDDO
-
-
-! !формула для n_i
-
-! 	*DO, i,1,nn,1
-! 		jnset(i,7,1)=jnset(nn,2,1)/(jnset(i,2,1)*jnset(i,6,1))
-! 	*ENDDO
-
-! !набор t
-! 	*DO, i2,1,splnn,1
-! 		jset(i2,1,1)=(i2-1)/(splnn-1)
-! 	*ENDDO
-
-
-
-! 	*DO, i3,2,nn+1,1
-! 		*DO, i2,1,splnn,1
-! 			jset(i2,i3,1)= jnset(i3-1,7,1)*jset(i2,1,1)**(i3-2)*(1-jset(i2,1,1))**(jnset(nn,1,1)-(i3-2))
-! 		*ENDDO
-! 	*ENDDO
-
-! jset(1,2,1)=1
-! jset(splnn,nn+1,1)=1
-
-! !==================================================cnh==============================
-
-! spl1=0
-! 	*DO,spl, 0, spl1,1
-! 		 *DO, i,1,nn,1
-! 			*DO,i2,1,splnn,1
-! 			jxset(i2+nn*spl,i,1)=jset(i2,i+1,1)*lowcXcyl(i+nn*spl,2,1)
-! 			jyset(i2+nn*spl,i,1)=jset(i2,i+1,1)*lowcXcyl(i+nn*spl,3,1)
-! 			*ENDDO
-! 		*ENDDO
-
-! 		*DO,i2,1,splnn,1
-! 			jxset(i2+nn*spl,nn+1,1)=0
-! 			jyset(i2+nn*spl,nn+1,1)=0
-! 		*ENDDO
-
-! 		*DO,i2,1,splnn,1
-! 			*DO, i,1,nn,1	
-! 				jxset(i2+nn*spl,nn+1,1)=jxset(i2+nn*spl,nn+1,1)+jxset(i2+nn*spl,i,1)
-! 				jyset(i2+nn*spl,nn+1,1)=jyset(i2+nn*spl,nn+1,1)+jyset(i2+nn*spl,i,1)	
-! 			*ENDDO
-! 		*ENDDO
-
-
-! 		*DO,i2,1,splnn,1
-! 			newcoordset(i2+nn*spl,1,1)=jxset(i2+nn*spl,nn+1,1)
-! 			newcoordset(i2+nn*spl,2,1)=jyset(i2+nn*spl,nn+1,1)
-! 		*ENDDO
-
-! 		*DO,i2,1,splnn,1
-! 			K,tn2+i2+nn*spl,newcoordset(i2+nn*spl,1,1),newcoordset(i2+nn*spl,2,1),0
-! 		*ENDDO 
-! 	*ENDDO 
-!  !===============
-
-
 
 !  !===============Узловой вектор ===============
 ! kk = 2 !степень     k
@@ -259,16 +156,16 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
 
 !=============== Функции базиса N цикл  ===============
 
-*DIM, basis_n, array, vecleng-kk, kk*elemcount
+*DIM, basis_n, array, elemcount, kk*elemcount
 *DO, mm, kk, elemcount, 1
     tt = opennodevector(mm+1,1,1)
     ttt = opennodevector(mm,1,1)
 
     *DO, i, 1, elemcount, 1 
-        *IF, tt, LE, opennodevector(i+1,1,1), AND, ttt, GE, opennodevector(i,1,1), THEN
-        basis_n(i,mm,1) = 1
+        *IF, tt, LE, opennodevector(i+1,1,1), AND,  ttt, GE, opennodevector(i,1,1), THEN
+            basis_n(i,mm,1) = 1
         *ELSE
-        basis_n(i,mm,1) = 0
+            basis_n(i,mm,1) = 0
         *ENDIF
     *ENDDO
 *ENDDO
@@ -299,15 +196,15 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
 
 !=============== Умножение весового вектора h на компонент базиса N и суммирование ===============
 
-*DIM, Sn, ARRAY, vecleng-kk, elemcount
+*DIM, Sn, ARRAY, elemcount, elemcount
 *DO, j, 1, elemcount, 1	
-	*DO, i, 1, elemcount+1, 1
+	*DO, i, 1, elemcount, 1
 		Sn(i,j,1) = VECTOR_H(1,j,1)*basis_n(i,(kk-1)*elemcount+j,1) 
 	*ENDDO
 *ENDDO
 
 
-*DIM, SnSUM, ARRAY, vecleng-kk, elemcount
+*DIM, SnSUM, ARRAY, elemcount, elemcount
 *DO, j, 1, elemcount-1, 1	
 	*DO, i, 1, elemcount, 1
 		SnSUM(i,j+1,1) = SnSUM(i,j,1)+Sn(i,j+1,1)
@@ -315,7 +212,7 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
 *ENDDO
 
 !=============== Компоненты вектора R ===============
-*DIM, Rv, ARRAY, vecleng-kk, elemcount
+*DIM, Rv, ARRAY, elemcount, elemcount
 *DO, j, 1, elemcount, 1	
 	*DO, i, 2, elemcount-kk, 1
 		RV(i,j,1) = Sn(i,j,1) / SnSUM(i,elemcount,1)
