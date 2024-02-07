@@ -32,12 +32,13 @@ R2=5 !наружный радиус сечерия тора
 
 r1=R2-h !внутренний радиус сечерия тора
 
-b=16*R2 !радиус окружности тора
+b=2*R2 !радиус окружности тора
 
 pr=2 !давление
 
-elemcount=12 !число разбиений сетки
+elemcount=6 !число разбиений сетки
 elemcount2=elemcount !
+nodecount=elemcount+1
 
 Pi=ACOS(-1)  !число пи
 
@@ -98,9 +99,9 @@ spl = 1
 
  !=============== Новый узловой вектор ===============
 kk = 2 !степень k
-n_v = elemcount ! число прямых участков n
-vecleng = kk + n_v + 1! длина узлового вектора
-hh = 2 ! Вес кривой
+n_v = elemcount + 1 ! число прямых участков n (число точек!!!)
+vecleng = kk + n_v! длина узлового вектора
+hh = 1 ! Вес кривой
 
 
 *DIM, opennodevector, array, vecleng, 1
@@ -120,7 +121,7 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
     *ENDIF
 
     *IF, i, LE, n_v - kk + 1, AND, i, GE, 1, THEN ! участок под счет
-    opennodevector(i+kk,1,1) = (((i/(n_v-kk+2))*horda_c(i+2,3,1) + horda_c(i+1,4,1))/horda_c(elemcount+1,4,1))*(n_v-kk+2)
+    opennodevector(i+kk,1,1) = (((i/(n_v-kk+2))*horda_c(i+1,3,1) + horda_c(i+1,4,1))/horda_c(elemcount+1,4,1))*(n_v-kk+2)
     *ELSE
     *ENDIF
 
@@ -156,31 +157,71 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
 
 !=============== Функции базиса N цикл  ===============
 
-*DIM, basis_n, array, elemcount, kk*elemcount
-*DO, mm, kk, elemcount, 1
-    tt = opennodevector(mm+1,1,1)
-    ttt = opennodevector(mm,1,1)
+!зафиксировать два значения в узловом векторе, и потом пробегать по ним всеми остальными значениями
 
-    *DO, i, 1, elemcount, 1 
-        *IF, tt, LE, opennodevector(i+1,1,1), AND,  ttt, GE, opennodevector(i,1,1), THEN
-            basis_n(i,mm,1) = 1
-        *ELSE
-            basis_n(i,mm,1) = 0
-        *ENDIF
-    *ENDDO
-*ENDDO
-   
+*DIM, basis_n, array, vecleng, kk*vecleng
+!basis_n(vecleng-1, n_v,1)=1
 
-*DO, j, elemcount+1, kk*elemcount, 1
-	*DO, i, 1, elemcount, 1
-		ttt=opennodevector(kk+i-1,1,1)
-		*IF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, OR, opennodevector(i+kk,1,1) - opennodevector(i+1,1,1), EQ, 0, THEN
-		basis_n(i,j,1) = 0
+*DO, mm, 1, vecleng-1, 1
+	tt = opennodevector(mm,1,1)
+	*DO, i, 1, vecleng, 1 
+		*IF, tt, LT, opennodevector(mm+1,1,1), AND,  tt, GE, opennodevector(mm,1,1), THEN
+		basis_n(mm,mm,1) = 1
 		*ELSE
-		basis_n(i,j,1)=(basis_n(i,j-elemcount,1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1))) +((((opennodevector(i+kk,1,1)-ttt))*basis_n(i+1,j-elemcount,1)) / (opennodevector(i+kk,1,1) - opennodevector(i+1,1,1)))
+		basis_n(mm,mm,1) = 0
 		*ENDIF
 	*ENDDO
 *ENDDO
+
+
+
+! *DO, mm, 1, vecleng, 1
+!     tt = opennodevector(mm,1,1)
+!         *DO, i, 1, vecleng-1, 1 
+!         *IF, tt, LT, opennodevector(i+1,1,1), AND,  tt, GE, opennodevector(i,1,1), THEN
+!             basis_n(i,mm,1) = 1
+!         *ELSE
+!             basis_n(i,mm,1) = 0
+!         *ENDIF
+!     *ENDDO
+! *ENDDO
+
+
+
+*DO, j, vecleng+1, kk*vecleng, 1
+	*DO, i, 2, vecleng-kk, 1
+		
+		ttt=opennodevector(i,1,1)
+
+		*IF, opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1), EQ, 0, THEN
+		basis_n(i,j,1) = ((opennodevector(i+kk-1,1,1)-ttt)*basis_n(i,j-vecleng+1,1)) / (opennodevector(i+kk-1,1,1) - opennodevector(i+1-1,1,1))
+
+		*ELSEIF, opennodevector(i+kk-1,1,1)-opennodevector(i+1-1,1,1), EQ, 0
+		basis_n(i,j,1) = basis_n(i,j-vecleng,1)*(ttt-opennodevector(i-1,1,1)) / (opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1))
+	
+		*ELSEIF, opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1), EQ, 0, AND, opennodevector(i+kk-1,1,1)-opennodevector(i+1-1,1,1), EQ, 0
+		basis_n(i,j,1) = 0
+		
+		*ELSE
+		basis_n(i,j,1) = (basis_n(i,j-vecleng,1)*(ttt-opennodevector(i-1,1,1)) / (opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1))) + ((((opennodevector(i+kk-1,1,1)-ttt))*basis_n(i,j-vecleng+1,1)) / (opennodevector(i+kk-1,1,1) - opennodevector(i+1-1,1,1)))
+		
+		*ENDIF
+	*ENDDO
+*ENDDO
+
+
+! *DO, j, vecleng+1, kk*vecleng, 1
+! 	*DO, i, 1, vecleng-kk, 1
+! 		ttt=opennodevector(kk+i-1,1,1)
+! 		*IF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, OR, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0, THEN
+! 		basis_n(i,j,1) = 0
+! 		*ELSE
+! 		basis_n(i,j,1) = (basis_n(i,j-vecleng+1,1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1))) + ((((opennodevector(i+kk,1,1)-ttt))*basis_n(i+1,j-vecleng+1,1)) / (opennodevector(i+kk,1,1) - opennodevector(i+1,1,1)))
+! 		*ENDIF
+! 	*ENDDO
+! *ENDDO
+
+
 
 	
 !=============== Весовой вектор h  ===============
