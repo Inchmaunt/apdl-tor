@@ -46,7 +46,8 @@ Pi=ACOS(-1)  !число пи
 
 tn = 1000 !техническое число
 
-elemsize=0.05
+elemsize=0.2
+
 
 
 K,10,b,0,0
@@ -75,6 +76,11 @@ DL,6,1, UY, ,
 CSYS,0 
 CSYS,112
 
+*GET, nummax, NODE, 0, NUM, MAX, , 
+*DIM, resset, array, nummax, 4
+*DIM, stressset, array, nummax, 1
+
+
 FINISH  
 /SOL
 !/STATUS,SOLU
@@ -83,17 +89,24 @@ SOLVE
 RSYS,112
 
 
-PATH,1122,2,30,20
-PPATH, 1, 318, , , , 112
-PPATH, 2, 470, , , , 112
+!PATH,1122,2,30,20
+!PPATH, 1, 318, , , , 112
+!PPATH, 2, 470, , , , 112
 !===============================================файлы===============================================
 
 /DELETE, D:\forlit, txt
-
+/DELETE, D:\resset, txt
 *CREATE,ansuitmp18
 *CFOPEN, 'D:\forlit', txt,,append
 *VWRITE,Rt,b,h,maxstress_r ,maxstress_R1,pr,po , , , ,, , , 
 (7f10.4)
+*CFCLOS
+*END
+
+*CREATE,ansuitmp19
+*CFOPEN, 'D:\resset', txt,,append
+*VWRITE,b,h,strmx,ccmx,ccmy,strmn,ccminx,ccminy, , , , ,, , , 
+(8f10.4)
 *CFCLOS
 *END
 
@@ -102,86 +115,128 @@ PPATH, 2, 470, , , , 112
 !*DO, h, 1.5,2, 0.1
 
 !*DO, pr, 1, 10, 1
-!	*DO, h, 0.1, 1, 0.1
-!	*DO, Rt, 2, 40, 0.5
-FINISH  
-/SOL
-!/STATUS,SOLU
+*DO, h, 0.1, 1, 0.05
+    *DO, Rt, 2, 40, 0.5
+        FINISH  
+        /SOL
+        !/STATUS,SOLU
 
-b=Rt*R2 !радиус окружности тора
-r1=R2-h
-SOLVE
-/POST1
-RSYS,112
-
-
-
-/PREP7
-LSCLEAR,ALL 
-ACLEAR,1
-ADELE, ALL
-LDELE,All
-KDELE,All
-CSYS,0 
-
-K,10,b,0,0
-
-CIRCLE, 10, R2, , , 180, 0
-CIRCLE, 10, r1, , , 180, 0
-
-LSTR, 1, 4
-LSTR, 3,6
-
-
-AL,ALL
-AESIZE,1,elemsize
-AMESH,1
-
-LOCAL,112,1,b,0,0, , , ,1,1,
-NROTAT,ALL
-LSCLEAR,ALL
-
-SFL,3,PRES,pr,
-SFL,4,PRES,pr,
-
-DL,5,1, UY, ,  
-DL,6,1, UY, ,  
-
-CSYS,0 
-CSYS,112
-
-FINISH  
-/SOL
-SOLVE
-/POST1
-RSYS,112
+        b=Rt*R2 !радиус окружности тора
+        r1=R2-h
+        SOLVE
+        /POST1
+        RSYS,112
 
 
 
+        /PREP7
+        LSCLEAR,ALL 
+        ACLEAR,1
+        ADELE, ALL
+        LDELE,All
+        KDELE,All
+        CSYS,0 
+
+        K,10,b,0,0
+
+        CIRCLE, 10, R2, , , 180, 0
+        CIRCLE, 10, r1, , , 180, 0
+
+        LSTR, 1, 4
+        LSTR, 3,6
+
+
+        AL,ALL
+        AESIZE,1,elemsize
+        AMESH,1
+
+        LOCAL,112,1,b,0,0, , , ,1,1,
+        NROTAT,ALL
+        LSCLEAR,ALL
+
+        SFL,3,PRES,pr,
+        SFL,4,PRES,pr,
+
+        DL,5,1, UY, ,  
+        DL,6,1, UY, ,  
+
+        CSYS,0 
+        CSYS,112
+
+
+        *GET, nummax, NODE, 0, NUM, MAX, , 
+        *DIM, resset, array, nummax, 4
+        *DIM, stressset, array, nummax, 1
+
+
+        FINISH  
+        /SOL
+        SOLVE
+        /POST1
+        RSYS,112
+
+
+
+        *DO, i, 1, nummax, 1
+            !*GET, cordmx, NODE, i, LOC, X, ,
+            !*GET, cordmy, NODE, i, LOC, Y, ,
+            *GET, maxstress_r, NODE, i, S,Y
+
+            !resset(i,1,1)=i
+            !resset(i,2,1)=cordmx
+            !resset(i,3,1)=cordmy
+            !resset(i,4,1)=maxstress_r
+            stressset(i,1,1)=maxstress_r
+        *ENDDO
+
+        !*VSCFUN, mxstrs, MAX, resset(1,1)
+        *VSCFUN, strmx, MAX, stressset(1,1)
+        *VSCFUN, strmn, MIN, stressset(1,1)   
+        *VSCFUN, locms, LMAX, stressset(1,1)
+        *VSCFUN, locmins, LMIN, stressset(1,1)
+        *GET, ccmx, NODE, locms, LOC, X
+        *GET, ccmy, NODE, locms, LOC, Y
+        *GET, ccminx, NODE, locmins, LOC, X
+        *GET, ccminy, NODE, locmins, LOC, Y
+        *USE, ansuitmp19
+        *DEL,resset
+        *DEL,stressset
+    *ENDDO
+*ENDDO
+
+!*Get, ccmx, node, 85, LOC, X
+!*Get, ccmx, node, 85, LOC, Y
+!*Get, ccmx, node, 86, LOC, X
+!*Get, ccmx, node, 86, LOC, Y
+!*Get, ccmx, node, 2, LOC, X
+!*Get, ccmx, node, 2, LOC, Y
 !*GET, maxstress_r, NODE, 632, S,Y
 !*GET, maxstress_R1, NODE, 317, S,Y
 
-*GET, maxstress_r, NODE, 1574, S,Y
-*GET, maxstress_R1, NODE, 788, S,Y
-*use, ansuitmp18
+!*GET, maxstress_r, NODE, 1574, S,Y
+!*GET, maxstress_R1, NODE, 788, S,Y
+!*use, ansuitmp18
 
 
-*CFOPEN, 'D:\nodecoords',TXT !Open a text file titled nodecoords
-*GET, maxs, PLNSOL, 0, MAX, , , 
-*GET, cordmax, NODE, N, LOC, X, Item2, IT2NUM
-PLNSOL,S,Y !Plot nodal solution for equivalent stress
-*GET,NODENUM,ACTIVE,,POST1,,INT,108 !Get node number of node with the max value in previous
-
-*VWRITE,NODENUM !Write to text file
-%C %I
-
-*CFCLOS !Close text file. If not closed the data will not be output to file.
-
-*ENDDO
+! *CFOPEN, 'D:\nodecoords',TXT !Open a text file titled nodecoords
+! PLNSOL, S,Y, 0,1.0  
+! *GET, maxs, PLNSOL, 0, MAX, , , 
+! !*GET, cordmax, NODE,, LOC, X, ,
 
 
-EPLOT   
-/REPLOT
+! PLNSOL,S,Y !Plot nodal solution for equivalent stress
+! *GET,NODENUM,COMMON,,POST1,,INT,108 !Get node number of node with the max value in previous
+
+! *VWRITE,NODENUM !Write to text file
+! %C %I
+
+! *CFCLOS !Close text file. If not closed the data will not be output to file.
+
+
+
+
+! EPLOT   
+! /REPLOT
 
 ! *DO, i, 0, elemcount,1
 ! lowcXcyl(i+1,1,1) = Pi/elemcount*i
