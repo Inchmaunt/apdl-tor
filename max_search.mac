@@ -76,9 +76,14 @@ DL,6,1, UY, ,
 CSYS,0 
 CSYS,112
 
-*GET, nummax, NODE, 0, NUM, MAX, , 
-*DIM, resset, array, nummax, 4
-*DIM, stressset, array, nummax, 1
+! *GET, nummax, NODE, 0, NUM, MAX, , 
+! *DIM, resset, array, nummax, 4
+! *DIM, stressset, array, nummax, 1
+
+
+pathpoints = 120
+*DIM, resset, array, pathpoints+1, 4
+*DIM, resset1, array, pathpoints+1, 4
 
 
 FINISH  
@@ -89,51 +94,163 @@ SOLVE
 RSYS,112
 
 
-PATH,p4,2,30,120,   
+pathpoints = 120
+PATH,p4,2,30, pathpoints,   
+
 CSWPLA,113  
 !*  
 WPOFF,10,0  
 CSWPLA,114,1
 CSCIR,114,1 
-PPATH,1,0,14.500001,0.1E-05,0   
-PPATH,2,0,14.499999,-0.1E-05,0  
+PPATH,1,0,b+r1,0,0   
+PPATH,2,0,b-r1,0,0  
 PMAP,'UNI ' 
 /PBC,PATH,1 
 /REPLOT 
 WPCSYS,1,113 
 CSWPLA,113 
 
+CSYS,112
+*DO, p,1,pathpoints+1
+
+    PDEF,SR1,S,Y,AVG
+    *GET, resset(p, 1), PATH, , ITEM, SR1, PATHPT, p
+    *GET, resset(p, 2), PATH, , ITEM, S, PATHPT, p
+    resset(p, 3)=resset(p, 2)/(r1)
+    resset(p, 4)=resset(p, 3)*180/(Pi)
+*ENDDO
+
+    *VSCFUN, lstrmx, LMAX, resset(1,1)
+    inerang_max=resset(lstrmx,4)
+
+    *VSCFUN, lstrmn, LMIN, resset(1,1)
+    inerang_min=resset(lstrmn,4)
+
+    ! *VSCFUN, strmn, MIN, stressset(1,1)   
+    ! *VSCFUN, locms, LMAX, stressset(1,1)
+    ! *VSCFUN, locmins, LMIN, stressset(1,1)
 
 
-PATH,pp3,2,30,120,  
+!PRANGE, Pi*2*r1/(60), 0, Pi*r1
+!PRPATH, SR1
+
+! *GET, insmax, PATH, p4, MAX, SR1
+! *GET, ccmx1, PATH, p4, LAST, S
+! *GET, insmin, PATH, p4, MIN, SR1
+! *GET, ccmn1, PATH, p4, LAST, S
+! RSYS,112
+! *GET, ccmx, NODE, insmax, LOC, Y
+! *GET, ccmn, NODE, insmin, LOC, Y
+!*GET, ccmy, NODE, insmax, LOC, Y
+
+
+
+
+! /POST1
+! num_loadsteps=2
+! ! Vertical path
+! xaux=3.5
+! zaux=0
+! ymin=-0.78
+! ymax=0
+! ! Path parameters
+! path_points=10
+! ! Define array to store results
+! *DIM, MARRAY, ARRAY, path_points, 3+num_loadsteps
+! ! Define a path
+! PATH, cutLine, 2, 4+num_loadsteps, path_points-1,
+! ! Define endpoint nodes on path
+! PPATH, 1, , xaux, ymin, zaux, 0
+! PPATH, 2, , xaux, ymax, zaux, 0
+! ! Get data from the path
+! *DO, p, 1, path_points
+! *DO, ls, 1, num_loadsteps
+! set, ls
+! ! Results - Stress SX
+! PDEF, SX, S, X
+! *GET, MARRAY(p, 3+ls), PATH, , ITEM, SX, PATHPT, p
+! *ENDDO
+! ! Coordinates
+! MARRAY(p, 1)=xaux
+! *GET, MARRAY(p, 2), PATH, , ITEM, YG, PATHPT, p
+! MARRAY(p, 3)=zaux
+! *ENDDO
+! ! Columns in results file: X, X, Z, SX LS1 to LS6
+! *MWRITE, MARRAY(1,1),Results_VerticalPath_SX,txt
+
+
+
+
+
+
+
+PATH,pp3,2,30,pathpoints,  
 CSWPLA,115  
 !*  
 WPOFF,10,0  
 CSWPLA,116,1
 CSCIR,116,1 
-PPATH,1,0,15.000001,0.1E-05,0   
-PPATH,2,0,14.999999,-0.1E-05,0  
+PPATH,1,0,b+R2,0,0   
+PPATH,2,0,b-R2,0,0  
 PMAP,'UNI ' 
 /PBC,PATH,1 
 /REPLOT 
 WPCSYS,1,115
 CSWPLA,115  
 
+!PRANGE, Pi*2*R/(60), 0, Pi*2*R
+
+CSYS,112
+*DO, p,1,pathpoints+1
+
+    PDEF,SR2,S,Y,AVG
+    *GET, resset1(p, 1), PATH, , ITEM, SR2, PATHPT, p
+    *GET, resset1(p, 2), PATH, , ITEM, S, PATHPT, p
+    resset1(p, 3)=resset1(p, 2)/(R2)
+    resset1(p, 4)=resset1(p, 3)*180/(Pi)
+*ENDDO
+
+    *VSCFUN, lstrmx1, LMAX, resset1(1,1)
+    outerang_max=resset1(lstrmx1,4)
+
+    *VSCFUN, lstrmn1, LMIN, resset1(1,1)
+    outerang_min=resset1(lstrmn1,4)
+
+
+
+PDEF,SR2,S,Y,AVG 
+/PBC,PATH, ,0   
+!PRPATH, SR2  
+
+*GET, outsmax, PATH, pp3, MAX, SR2
+*GET, ccmx, PATH, pp3, LAST, S
+*GET, outsmin, PATH, pp3, MIN, SR2
+*GET, ccmin, PATH, pp3, LAST, S
+
+
 !===============================================файлы===============================================
 
 /DELETE, D:\forlit, txt
 /DELETE, D:\resset, txt
+/DELETE, D:\newresset, txt
 *CREATE,ansuitmp18
-*CFOPEN, 'D:\forlit', txt,,append
-*VWRITE,Rt,b,h,maxstress_r ,maxstress_R1,pr,po , , , ,, , , 
-(7f10.4)
-*CFCLOS
-*END
+! *CFOPEN, 'D:\forlit', txt,,append
+! *VWRITE,Rt,b,h,maxstress_r ,maxstress_R1,pr,po , , , ,, , , 
+! (7f10.4)
+! *CFCLOS
+! *END
 
-*CREATE,ansuitmp19
-*CFOPEN, 'D:\resset', txt,,append
-*VWRITE,b,h,strmx,ccmx,ccmy,strmn,ccminx,ccminy, , , , ,, , , 
-(8f10.4)
+! *CREATE,ansuitmp19
+! *CFOPEN, 'D:\resset', txt,,append
+! *VWRITE,b,h,strmx,ccmx,ccmy,strmn,ccminx,ccminy, , , , ,, , , 
+! (8f10.4)
+! *CFCLOS
+! *END
+
+*CREATE,ansuitmp20
+*CFOPEN, 'D:\newresset', txt,,append
+*VWRITE,b,h,insmax,insmaxloc,insmin,insminloc,outsmax, outsmaxloc,outsmin,outsminloc,, , , , ,, , , 
+(10f10.4)
 *CFCLOS
 *END
 
@@ -170,7 +287,7 @@ CSWPLA,115
         CIRCLE, 10, r1, , , 180, 0
 
         LSTR, 1, 4
-        LSTR, 3,6
+        LSTR, 3, 6
 
 
         AL,ALL
@@ -190,35 +307,126 @@ CSWPLA,115
         CSYS,0 
         CSYS,112
 
-
-        *GET, nummax, NODE, 0, NUM, MAX, , 
-        *DIM, resset, array, nummax, 4
-        *DIM, stressset, array, nummax, 1
+        ! *GET, nummax, NODE, 0, NUM, MAX, , 
+        ! *DIM, resset, array, nummax, 4
+        ! *DIM, stressset, array, nummax, 1
 
 
         FINISH  
         /SOL
+        !/STATUS,SOLU
         SOLVE
-        /POST1
+        /Post1
         RSYS,112
 
 
+        PATH,p4,2,30,120,   
 
-        *DO, i, 1, nummax, 1
-            *GET, maxstress_r, NODE, i, S,Y
-            stressset(i,1,1)=maxstress_r
-        *ENDDO
+        CSWPLA,113  
+        !*  
+        WPOFF,b,0  
+        CSWPLA,114,1
+        CSCIR,114,1 
+        PPATH,1,0,b+r1,0,0   
+        PPATH,2,0,b-r1,0,0  
+        PMAP,'UNI ' 
+        /PBC,PATH,1 
+        /REPLOT 
+        WPCSYS,1,113 
+        CSWPLA,113 
 
-        *VSCFUN, strmx, MAX, stressset(1,1)
-        *VSCFUN, strmn, MIN, stressset(1,1)   
-        *VSCFUN, locms, LMAX, stressset(1,1)
-        *VSCFUN, locmins, LMIN, stressset(1,1)
-        *GET, ccmx, NODE, locms, LOC, X
-        *GET, ccmy, NODE, locms, LOC, Y
-        *GET, ccminx, NODE, locmins, LOC, X
-        *GET, ccminy, NODE, locmins, LOC, Y
-        *USE, ansuitmp19
-        *DEL,resset
-        *DEL,stressset
+        PDEF,SR1,S,Y,AVG 
+        !PRANGE, Pi*2*r1/(60), 0, Pi*r1
+        !PRPATH, SR1
+
+        *GET, insmax, PATH, p4, MAX, SR1
+        *GET, insmaxloc, PATH, p4, LAST, S
+        *USE, ansuitmp20
+        *GET, insmin, PATH, p4, MIN, SR1
+        *GET, insminloc, PATH, p4, LAST, S
+        *USE, ansuitmp20
+
+        PATH,pp3,2,30,120,  
+        CSWPLA,115  
+        !*  
+        WPOFF,b,0  
+        CSWPLA,116,1
+        CSCIR,116,1 
+        PPATH,1,0,b+R2,0,0   
+        PPATH,2,0,b-R2,0,0  
+        PMAP,'UNI ' 
+        /PBC,PATH,1 
+        /REPLOT 
+        WPCSYS,1,115
+        CSWPLA,115  
+
+        !PRANGE, Pi*2*R/(60), 0, Pi*2*R
+
+        PDEF,SR2,S,Y,AVG 
+        /PBC,PATH, ,0   
+        !PRPATH, SR2  
+
+        *GET, outsmax, PATH, pp3, MAX, SR2
+        *GET, outsmaxloc, PATH, pp3, LAST, S
+        *USE, ansuitmp20
+        *GET, outsmin, PATH, pp3, MIN, SR2
+        *GET, outsminloc, PATH, pp3, LAST, S
+        *USE, ansuitmp20
+        ! K,10,b,0,0
+
+        ! CIRCLE, 10, R2, , , 180, 0
+        ! CIRCLE, 10, r1, , , 180, 0
+
+        ! LSTR, 1, 4
+        ! LSTR, 3,6
+
+
+        ! AL,ALL
+        ! AESIZE,1,elemsize
+        ! AMESH,1
+
+        ! LOCAL,112,1,b,0,0, , , ,1,1,
+        ! NROTAT,ALL
+        ! LSCLEAR,ALL
+
+        ! SFL,3,PRES,pr,
+        ! SFL,4,PRES,pr,
+
+        ! DL,5,1, UY, ,  
+        ! DL,6,1, UY, ,  
+
+        ! CSYS,0 
+        ! CSYS,112
+
+
+        ! *GET, nummax, NODE, 0, NUM, MAX, , 
+        ! *DIM, resset, array, nummax, 4
+        ! *DIM, stressset, array, nummax, 1
+
+
+        ! FINISH  
+        ! /SOL
+        ! SOLVE
+        ! /POST1
+        ! RSYS,112
+
+
+
+        ! *DO, i, 1, nummax, 1
+        !     *GET, maxstress_r, NODE, i, S,Y
+        !     stressset(i,1,1)=maxstress_r
+        ! *ENDDO
+
+        ! *VSCFUN, strmx, MAX, stressset(1,1)
+        ! *VSCFUN, strmn, MIN, stressset(1,1)   
+        ! *VSCFUN, locms, LMAX, stressset(1,1)
+        ! *VSCFUN, locmins, LMIN, stressset(1,1)
+        ! *GET, ccmx, NODE, locms, LOC, X
+        ! *GET, ccmy, NODE, locms, LOC, Y
+        ! *GET, ccminx, NODE, locmins, LOC, X
+        ! *GET, ccminy, NODE, locmins, LOC, Y
+        ! *USE, ansuitmp19
+        ! *DEL,resset
+        ! *DEL,stressset
     *ENDDO
 *ENDDO
