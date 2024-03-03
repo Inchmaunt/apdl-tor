@@ -89,8 +89,6 @@ SOLVE
 RSYS,112
 
 
-PATH,p3,2,30,120, 
-!*  
 PATH,p4,2,30,120,   
 CSWPLA,113  
 !*  
@@ -104,7 +102,23 @@ PMAP,'UNI '
 /REPLOT 
 WPCSYS,1,113 
 CSWPLA,113 
-PLPATH,S 
+
+
+
+PATH,pp3,2,30,120,  
+CSWPLA,115  
+!*  
+WPOFF,10,0  
+CSWPLA,116,1
+CSCIR,116,1 
+PPATH,1,0,15.000001,0.1E-05,0   
+PPATH,2,0,14.999999,-0.1E-05,0  
+PMAP,'UNI ' 
+/PBC,PATH,1 
+/REPLOT 
+WPCSYS,1,115
+CSWPLA,115  
+
 !===============================================файлы===============================================
 
 /DELETE, D:\forlit, txt
