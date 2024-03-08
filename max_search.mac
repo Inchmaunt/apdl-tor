@@ -46,9 +46,9 @@ Pi=ACOS(-1)  !число пи
 
 tn = 1000 !техническое число
 
-elemsize=0.2
+elemsize=0.05 !размер разбиения
 
-
+! начало решения
 
 K,10,b,0,0
 
@@ -126,61 +126,7 @@ CSYS,112
     *VSCFUN, lstrmn, LMIN, resset(1,1)
     inerang_min=resset(lstrmn,4)
 
-    ! *VSCFUN, strmn, MIN, stressset(1,1)   
-    ! *VSCFUN, locms, LMAX, stressset(1,1)
-    ! *VSCFUN, locmins, LMIN, stressset(1,1)
-
-
-!PRANGE, Pi*2*r1/(60), 0, Pi*r1
-!PRPATH, SR1
-
-! *GET, insmax, PATH, p4, MAX, SR1
-! *GET, ccmx1, PATH, p4, LAST, S
-! *GET, insmin, PATH, p4, MIN, SR1
-! *GET, ccmn1, PATH, p4, LAST, S
-! RSYS,112
-! *GET, ccmx, NODE, insmax, LOC, Y
-! *GET, ccmn, NODE, insmin, LOC, Y
-!*GET, ccmy, NODE, insmax, LOC, Y
-
-
-
-
-! /POST1
-! num_loadsteps=2
-! ! Vertical path
-! xaux=3.5
-! zaux=0
-! ymin=-0.78
-! ymax=0
-! ! Path parameters
-! path_points=10
-! ! Define array to store results
-! *DIM, MARRAY, ARRAY, path_points, 3+num_loadsteps
-! ! Define a path
-! PATH, cutLine, 2, 4+num_loadsteps, path_points-1,
-! ! Define endpoint nodes on path
-! PPATH, 1, , xaux, ymin, zaux, 0
-! PPATH, 2, , xaux, ymax, zaux, 0
-! ! Get data from the path
-! *DO, p, 1, path_points
-! *DO, ls, 1, num_loadsteps
-! set, ls
-! ! Results - Stress SX
-! PDEF, SX, S, X
-! *GET, MARRAY(p, 3+ls), PATH, , ITEM, SX, PATHPT, p
-! *ENDDO
-! ! Coordinates
-! MARRAY(p, 1)=xaux
-! *GET, MARRAY(p, 2), PATH, , ITEM, YG, PATHPT, p
-! MARRAY(p, 3)=zaux
-! *ENDDO
-! ! Columns in results file: X, X, Z, SX LS1 to LS6
-! *MWRITE, MARRAY(1,1),Results_VerticalPath_SX,txt
-
-
-
-
+  
 
 
 
@@ -218,14 +164,14 @@ CSYS,112
 
 
 
-PDEF,SR2,S,Y,AVG 
-/PBC,PATH, ,0   
-!PRPATH, SR2  
+! PDEF,SR2,S,Y,AVG 
+! /PBC,PATH, ,0   
+! !PRPATH, SR2  
 
-*GET, outsmax, PATH, pp3, MAX, SR2
-*GET, ccmx, PATH, pp3, LAST, S
-*GET, outsmin, PATH, pp3, MIN, SR2
-*GET, ccmin, PATH, pp3, LAST, S
+! *GET, outsmax, PATH, pp3, MAX, SR2
+! *GET, ccmx, PATH, pp3, LAST, S
+! *GET, outsmin, PATH, pp3, MIN, SR2
+! *GET, ccmin, PATH, pp3, LAST, S
 
 
 !===============================================файлы===============================================
@@ -233,7 +179,7 @@ PDEF,SR2,S,Y,AVG
 /DELETE, D:\forlit, txt
 /DELETE, D:\resset, txt
 /DELETE, D:\newresset, txt
-*CREATE,ansuitmp18
+!*CREATE,ansuitmp18
 ! *CFOPEN, 'D:\forlit', txt,,append
 ! *VWRITE,Rt,b,h,maxstress_r ,maxstress_R1,pr,po , , , ,, , , 
 ! (7f10.4)
@@ -249,7 +195,7 @@ PDEF,SR2,S,Y,AVG
 
 *CREATE,ansuitmp20
 *CFOPEN, 'D:\newresset', txt,,append
-*VWRITE,b,h,insmax,insmaxloc,insmin,insminloc,outsmax, outsmaxloc,outsmin,outsminloc,, , , , ,, , , 
+*VWRITE, b, h, instressmx, inerangmax, instressmn, inerangmin, outstressmax, outerangmax, outstressmin, outerangmin 
 (10f10.4)
 *CFCLOS
 *END
@@ -259,8 +205,8 @@ PDEF,SR2,S,Y,AVG
 !*DO, h, 1.5,2, 0.1
 
 !*DO, pr, 1, 10, 1
-*DO, h, 0.1, 1, 0.1
-    *DO, Rt, 2, 10, 1
+*DO, Rt, 2, 10, 1
+    *DO, h, 0.1, 1, 0.05
         FINISH  
         /SOL
         !/STATUS,SOLU
@@ -312,6 +258,11 @@ PDEF,SR2,S,Y,AVG
         ! *DIM, stressset, array, nummax, 1
 
 
+        pathpoints = 120
+        *DIM, resset, array, pathpoints+1, 4
+        *DIM, resset1, array, pathpoints+1, 4
+
+
         FINISH  
         /SOL
         !/STATUS,SOLU
@@ -320,7 +271,8 @@ PDEF,SR2,S,Y,AVG
         RSYS,112
 
 
-        PATH,p4,2,30,120,   
+        pathpoints = 120
+        PATH,p4,2,30, pathpoints,   
 
         CSWPLA,113  
         !*  
@@ -335,18 +287,32 @@ PDEF,SR2,S,Y,AVG
         WPCSYS,1,113 
         CSWPLA,113 
 
-        PDEF,SR1,S,Y,AVG 
-        !PRANGE, Pi*2*r1/(60), 0, Pi*r1
-        !PRPATH, SR1
+        CSYS,112
+        *DO, p,1,pathpoints+1
 
-        *GET, insmax, PATH, p4, MAX, SR1
-        *GET, insmaxloc, PATH, p4, LAST, S
-        *USE, ansuitmp20
-        *GET, insmin, PATH, p4, MIN, SR1
-        *GET, insminloc, PATH, p4, LAST, S
-        *USE, ansuitmp20
+            PDEF,SR1,S,Y,AVG
+            *GET, resset(p, 1), PATH, , ITEM, SR1, PATHPT, p
+            *GET, resset(p, 2), PATH, , ITEM, S, PATHPT, p
+            resset(p, 3)=resset(p, 2)/(r1)
+            resset(p, 4)=resset(p, 3)*180/(Pi)
+        *ENDDO
 
-        PATH,pp3,2,30,120,  
+
+            *VSCFUN, instressmx, MAX, resset(1,1)
+            *VSCFUN, lstrmx, LMAX, resset(1,1)
+            inerangmax=resset(lstrmx,4)
+            
+
+            *VSCFUN, instressmn, MIN, resset(1,1)
+            *VSCFUN, lstrmn, LMIN, resset(1,1)
+            inerangmin=resset(lstrmn,4)
+            
+
+        
+
+
+
+        PATH,pp3,2,30,pathpoints,  
         CSWPLA,115  
         !*  
         WPOFF,b,0  
@@ -362,16 +328,30 @@ PDEF,SR2,S,Y,AVG
 
         !PRANGE, Pi*2*R/(60), 0, Pi*2*R
 
-        PDEF,SR2,S,Y,AVG 
-        /PBC,PATH, ,0   
-        !PRPATH, SR2  
+        CSYS,112
+        *DO, p,1,pathpoints+1
 
-        *GET, outsmax, PATH, pp3, MAX, SR2
-        *GET, outsmaxloc, PATH, pp3, LAST, S
-        *USE, ansuitmp20
-        *GET, outsmin, PATH, pp3, MIN, SR2
-        *GET, outsminloc, PATH, pp3, LAST, S
-        *USE, ansuitmp20
+            PDEF,SR2,S,Y,AVG
+            *GET, resset1(p, 1), PATH, , ITEM, SR2, PATHPT, p
+            *GET, resset1(p, 2), PATH, , ITEM, S, PATHPT, p
+            resset1(p, 3)=resset1(p, 2)/(R2)
+            resset1(p, 4)=resset1(p, 3)*180/(Pi) 
+        *ENDDO
+        ! *MWRITE, resset1, outer, txt, --, IJK,
+        !  %10.4F %10.4F %10.4F %10.4F
+
+
+            *VSCFUN, outstressmax,MAX, resset1(1,1)
+            *VSCFUN, lstrmx1, LMAX, resset1(1,1)
+            outerangmax = resset1(lstrmx1,4)
+            
+
+            *VSCFUN, outstressmin,MIN, resset1(1,1)
+            *VSCFUN, lstrmn1, LMIN, resset1(1,1)
+            outerangmin = resset1(lstrmn1,4)
+            *USE, ansuitmp20
+            *DEL,resset
+            *DEL,resset1
         ! K,10,b,0,0
 
         ! CIRCLE, 10, R2, , , 180, 0
