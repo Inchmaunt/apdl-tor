@@ -37,8 +37,8 @@ Rt=2
 
 b=Rt*R2 !радиус окружности тора
 
-pr=1 !давление внутреннее
-po=0 !давление внешнее
+pr=21 !давление внутреннее
+po=20 !давление внешнее
 
 elemcount=480 !число разбиений сетки
 
@@ -69,6 +69,9 @@ LSCLEAR,ALL
 
 SFL,3,PRES,pr,
 SFL,4,PRES,pr,
+SFL,1,PRES,po,
+SFL,2,PRES,po,
+
 
 DL,5,1, UY, ,  
 DL,6,1, UY, ,  
@@ -81,7 +84,7 @@ CSYS,112
 ! *DIM, stressset, array, nummax, 1
 
 
-pathpoints = 120
+pathpoints = 180
 *DIM, resset, array, pathpoints+1, 4
 *DIM, resset1, array, pathpoints+1, 4
 
@@ -94,7 +97,7 @@ SOLVE
 RSYS,112
 
 
-pathpoints = 120
+pathpoints = 180
 PATH,p4,2,30, pathpoints,   
 
 CSWPLA,113  
@@ -120,11 +123,11 @@ CSYS,112
     resset(p, 4)=resset(p, 3)*180/(Pi)
 *ENDDO
 
-    *VSCFUN, lstrmx, LMAX, resset(1,1)
-    inerang_max=resset(lstrmx,4)
+    *VSCFUN, lstrmx, LMAX, resset(1,4)
+    inerang_max=resset(lstrmx,1)
 
-    *VSCFUN, lstrmn, LMIN, resset(1,1)
-    inerang_min=resset(lstrmn,4)
+    ! *VSCFUN, lstrmn, LMIN, resset(1,1)
+    ! inerang_min=resset(lstrmn,4)
 
   
 
@@ -156,11 +159,11 @@ CSYS,112
     resset1(p, 4)=resset1(p, 3)*180/(Pi)
 *ENDDO
 
-    *VSCFUN, lstrmx1, LMAX, resset1(1,1)
-    outerang_max=resset1(lstrmx1,4)
+    *VSCFUN, lstrmx1, LMAX, resset1(1,4)
+    outerang_max=resset1(lstrmx1,1)
 
-    *VSCFUN, lstrmn1, LMIN, resset1(1,1)
-    outerang_min=resset1(lstrmn1,4)
+    ! *VSCFUN, lstrmn1, LMIN, resset1(1,1)
+    ! outerang_min=resset1(lstrmn1,4)
 
 
 
@@ -168,10 +171,7 @@ CSYS,112
 ! /PBC,PATH, ,0   
 ! !PRPATH, SR2  
 
-! *GET, outsmax, PATH, pp3, MAX, SR2
-! *GET, ccmx, PATH, pp3, LAST, S
-! *GET, outsmin, PATH, pp3, MIN, SR2
-! *GET, ccmin, PATH, pp3, LAST, S
+
 
 
 !===============================================файлы===============================================
@@ -179,6 +179,7 @@ CSYS,112
 /DELETE, D:\forlit, txt
 /DELETE, D:\resset, txt
 /DELETE, D:\newresset, txt
+/DELETE, D:\newresset90, txt
 !*CREATE,ansuitmp18
 ! *CFOPEN, 'D:\forlit', txt,,append
 ! *VWRITE,Rt,b,h,maxstress_r ,maxstress_R1,pr,po , , , ,, , , 
@@ -195,18 +196,26 @@ CSYS,112
 
 *CREATE,ansuitmp20
 *CFOPEN, 'D:\newresset', txt,,append
-*VWRITE, b, h, instressmx, inerangmax, instressmn, inerangmin, outstressmax, outerangmax, outstressmin, outerangmin 
-(10f10.4)
+*VWRITE, b, h, i_ang_180, i_s_180, o_ang_180, o_s_180
+(6f10.4)
 *CFCLOS
 *END
+
+*CREATE,ansuitmp21
+*CFOPEN, 'D:\newresset90', txt,,append
+*VWRITE, b, h, i_ang_90, i_s_90, o_ang_90, o_s_90
+(6f10.4)
+*CFCLOS
+*END
+
 
 !================================цикл===============================================
 !================================цикл===============================================
 !*DO, h, 1.5,2, 0.1
-!h=0.5
+h=1
 !*DO, pr, 1, 10, 1
-*DO, Rt, 2, 20, 1
-    *DO, h, 0.1, 1, 0.1
+*DO, Rt, 2, 50, 1
+    !*DO, h, 0.1, 1, 0.025
         FINISH  
         /SOL
         !/STATUS,SOLU
@@ -246,6 +255,9 @@ CSYS,112
 
         SFL,3,PRES,pr,
         SFL,4,PRES,pr,
+        SFL,1,PRES,po,
+        SFL,2,PRES,po,
+        
 
         DL,5,1, UY, ,  
         DL,6,1, UY, ,  
@@ -258,7 +270,7 @@ CSYS,112
         ! *DIM, stressset, array, nummax, 1
 
 
-        pathpoints = 120
+        pathpoints = 180
         *DIM, resset, array, pathpoints+1, 4
         *DIM, resset1, array, pathpoints+1, 4
 
@@ -271,7 +283,7 @@ CSYS,112
         RSYS,112
 
 
-        pathpoints = 120
+        pathpoints = 180
         PATH,p4,2,30, pathpoints,   
 
         CSWPLA,113  
@@ -298,14 +310,22 @@ CSYS,112
         *ENDDO
 
 
-            *VSCFUN, instressmx, MAX, resset(1,1)
-            *VSCFUN, lstrmx, LMAX, resset(1,1)
-            inerangmax=resset(lstrmx,4)
+
+            *VSCFUN, i_ang_180, MAX, resset(1,4)
+            *VSCFUN, i_l_ang_180, LMAX, resset(1,4)
+            i_s_180=resset(i_l_ang_180,1)
+
+            i_ang_90=resset(1,4)
+            i_s_90=resset(1,1)
+
+            ! *VSCFUN, instressmx, MAX, resset(1,4)
+            ! *VSCFUN, lstrmx, LMAX, resset(1,1)
+            ! inerangmax=resset(lstrmx,4)
             
 
-            *VSCFUN, instressmn, MIN, resset(1,1)
-            *VSCFUN, lstrmn, LMIN, resset(1,1)
-            inerangmin=resset(lstrmn,4)
+            ! *VSCFUN, instressmn, MIN, resset(1,1)
+            ! *VSCFUN, lstrmn, LMIN, resset(1,1)
+            ! inerangmin=resset(lstrmn,4)
             
 
         
@@ -341,14 +361,21 @@ CSYS,112
         !  %10.4F %10.4F %10.4F %10.4F
 
 
-            *VSCFUN, outstressmax,MAX, resset1(1,1)
-            *VSCFUN, lstrmx1, LMAX, resset1(1,1)
-            outerangmax = resset1(lstrmx1,4)
-            
+            *VSCFUN, o_ang_180, MAX, resset1(1,4)
+            *VSCFUN, o_l_ang_180, LMAX, resset1(1,4)
+            o_s_180=resset1(o_l_ang_180,1)
 
-            *VSCFUN, outstressmin,MIN, resset1(1,1)
-            *VSCFUN, lstrmn1, LMIN, resset1(1,1)
-            outerangmin = resset1(lstrmn1,4)
+            o_ang_90=resset1(1,4)
+            o_s_90=resset1(1,1)
+
+            ! *VSCFUN, outstressmax,MAX, resset1(1,1)
+            ! *VSCFUN, lstrmx1, LMAX, resset1(1,1)
+            ! outerangmax = resset1(lstrmx1,4)
+            
+            *USE, ansuitmp21
+            ! *VSCFUN, outstressmin,MIN, resset1(1,1)
+            ! *VSCFUN, lstrmn1, LMIN, resset1(1,1)
+            ! outerangmin = resset1(lstrmn1,4)
             *USE, ansuitmp20
             *DEL,resset
             *DEL,resset1
@@ -408,5 +435,5 @@ CSYS,112
         ! *USE, ansuitmp19
         ! *DEL,resset
         ! *DEL,stressset
-    *ENDDO
+    !*ENDDO
 *ENDDO
