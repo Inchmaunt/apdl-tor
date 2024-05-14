@@ -35,7 +35,7 @@
 
     b=2*R2 !радиус окружности тора
 
-    pr=0.5 !давление
+    pr=2 !давление
 
     elemcount=120 !число разбиений сетки
 
@@ -92,7 +92,7 @@
     *ENDDO
         
     *DO, i, 1, elemcount,1
-    LSTR, i+tn, i+1+tn
+        LSTR, i+tn, i+1+tn
     *ENDDO 
     LSTR, 1, 1+tn
     LSTR, elemcount+1, elemcount+1+tn
@@ -107,9 +107,11 @@
     LOCAL,112,1,b,0,0, , , ,1,1,
     NROTAT,ALL
     LSCLEAR,ALL 
+
     *DO, i, 1, elemcount,1
-    SFL,i,PRES,pr,
+        SFL,i,PRES,pr,
     *ENDDO
+
     DL,elemcount*2+1,1, UY, ,  
     DL,elemcount*2+2,1, UY, ,  
 
