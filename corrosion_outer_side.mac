@@ -44,11 +44,11 @@ Pi=ACOS(-1)  !число пи
 
 tn = 1000 !техническое число
 
-ai=0
-mi=0
+ai=0.05
+mi=ai/200
 
-ao=0.1
-mo=0
+ao=0.05
+mo=ai/200
 
 timesize=0.01 !шаг по времени в задаче
 
@@ -135,7 +135,7 @@ RSYS,112
 
 /DELETE, D:\stressatnodes, txt
 /DELETE, D:\thickdepStress, txt
-
+/DELETE, D:\doubleside, txt
 
 *CREATE,ansuitmp12
 *MWRITE,lowcxcorrosion, D:\solidthicarray1231231, txt,, JIK, 2,
@@ -155,6 +155,13 @@ RSYS,112
 *CFOPEN, 'D:\thickdepStress', txt,,append
 *VWRITE,t1,DEPmaxstress,Coordofmax,DEPminthick,Coordofminthick , ,, ,,, , , , ,, , , ,
 (5f10.4)
+*CFCLOS
+*END
+
+*CREATE,ansuitmp15
+*CFOPEN, 'D:\doubleside', txt,,append
+*VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,, ,,, , , , ,, , , ,
+(6f10.4)
 *CFCLOS
 *END
 
@@ -211,8 +218,8 @@ RSYS,112
 
     *DO, i, 0, elemcount, 1
         highcxcorrosion(i+1,1,1) = Pi/elemcount*i
-        highcxcorrosion(i+1,2,1) = b+(R2-(ao+(lowcxstress(i+1,1,1))*mo)*t1)*COS(Pi/elemcount*i)
-        highcxcorrosion(i+1,3,1) = (R2-(ao+(lowcxstress(i+1,1,1))*mo)*t1)*SIN(Pi/elemcount*i)
+        highcxcorrosion(i+1,2,1) = b+(R2-(ao+(highcxstress(i+1,1,1))*mo)*t1)*COS(Pi/elemcount*i)
+        highcxcorrosion(i+1,3,1) = (R2-(ao+(highcxstress(i+1,1,1))*mo)*t1)*SIN(Pi/elemcount*i)
     *ENDDO
 
 
@@ -280,16 +287,26 @@ RSYS,112
     SOLVE
 
     !результаты (время, максимальное напряжение в узле, координата узла, минимальная толщина в узле)
-
+    
+    !массивы для расчета напряжений
     *VSCFUN, DEPmaxstress, MAX, lowcxstress(1,1)
+    *VSCFUN, DEPmaxstressouter, MAX, highcxstress(1,1)
+
+    !max напряжения на внутренней поверхности
     *VSCFUN, locstress, LMAX, lowcxstress(1,1)
     Coordofmax = lowcxstress(locstress,2)*180/Pi
+
+    !max напряжения на внешней поверхности
+    *VSCFUN, locstressouter, LMAX, highcxstress(1,1)
+    Coordofmaxouter = highcxstress(locstressouter,2)*180/Pi   
+
+    !расчет толщины
     *VSCFUN, DEPminthick, MIN, thickness(1,3)
     *VSCFUN, locminthick, LMIN, thickness(1,3)
     Coordofminthick = thickness(locminthick,2)
 
     *use, ansuitmp14
-
+    *use, ansuitmp15
     *use,ansuitmp12
 
 *ENDDO
