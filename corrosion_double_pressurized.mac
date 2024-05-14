@@ -37,8 +37,8 @@ r1=R2-h !внутренний радиус сечерия тора
 
 b=2*R2 !радиус окружности тора
 
-pr=21   !давление внутреннее
-po=20   !давление внешнее
+pr=71   !давление внутреннее
+po=70   !давление внешнее
 
 elemcount=120 !число разбиений сетки
 
@@ -47,7 +47,7 @@ Pi=ACOS(-1)  !число пи
 tn=1000 !техническое число
 
 ai=0.05
-mi=0
+mi=ai/200
 
 ao=0.05
 mo=0
@@ -64,9 +64,9 @@ meshsize=1 !размер элементов сетки
 !==================массивы для задачи==================
 
 *DIM, lowcXcyl, array, elemcount+1, 3
-*DIM, lowcxstress, array, elemcount+1, 2
+*DIM, lowcxstress, array, elemcount+1, 3
 *DIM, highcXcyl, array, elemcount+1, 3
-*DIM, highcxstress, array, elemcount+1, 2
+*DIM, highcxstress, array, elemcount+1, 3
 *DIM, lowcxcorrosion, array, elemcount+1, 3
 *DIM, highcxcorrosion, array, elemcount+1, 3
 *DIM, thickness, array, elemcount+1, 3
@@ -209,18 +209,28 @@ RSYS,112
     *DO, i, 0, elemcount,1
         *GET, lowcxstress(i+1,1,1), NODE, i+1, S,Y
         lowcxstress(i+1,2,1) = Pi/elemcount*i
+        *IF, lowcxstress(i+1,1,1), LT, 0, THEN
+            lowcxstress(i+1,3,1)=-lowcxstress(i+1,1,1)
+            *ELSE
+            lowcxstress(i+1,3,1)=lowcxstress(i+1,1,1)
+        *ENDIF
     *ENDDO
-
+    
     *DO, i, 0, elemcount,1
         *GET, highcxstress(i+1,1,1), NODE, elemcount+i+1+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
         highcxstress(i+1,2,1) = Pi/elemcount*i
+        *IF, highcxstress(i+1,1,1), LT, 0, THEN
+            highcxstress(i+1,3,1)=-highcxstress(i+1,1,1)
+            *ELSE
+            highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
+        *ENDIF
     *ENDDO
 
     !вычисляем новую геометрию по коррозии
     *DO, i, 0, elemcount, 1
         lowcxcorrosion(i+1,1,1) = Pi/elemcount*i
-        lowcxcorrosion(i+1,2,1) = b+((R2-h)+(ai+(lowcxstress(i+1,1,1))*mi)*t1)*COS(Pi/elemcount*i)
-        lowcxcorrosion(i+1,3,1) = ((R2-h)+(ai+(lowcxstress(i+1,1,1))*mi)*t1)*SIN(Pi/elemcount*i)
+        lowcxcorrosion(i+1,2,1) = b+((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(Pi/elemcount*i)
+        lowcxcorrosion(i+1,3,1) = ((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*SIN(Pi/elemcount*i)
     *ENDDO
 
 
