@@ -22,20 +22,21 @@ h=0.1 ! толщина стенки
 R1=5 ! радиус оболочки
 pr=1 !давление
 b=2*R1 !радиус окружности тора
-elemcount=120
+elemcount=60
 
 ai=0.05
-mi=ai/200
+mi=ai/500
 
-ao=0.05
+ao=0!0.05
 mo=0!ao/500
 
 timesize=0.01 !шаг по времени в задаче
 
 
 K,1,b,0,0,
-CIRCLE, 1, R1-h*0.5, , , 180, 1
+CIRCLE, 1, R1-h*0.5, , , 360, 0
 LCOMB, 1,2,0
+LCOMB, 2,3,0
 
 LOCAL,11,1,b,0,0, , , ,1,1,
 LOCAL,1211,1,b,0,0,90 180 ,90 ,1,1,
@@ -98,7 +99,7 @@ RSYS,11
 
 *CREATE,ansuitmp2
 *CFOPEN, 'D:\resultStress', txt,,append
-*VWRITE,t1,maxstress,Coordofnaxstress,minthic,Coordofminthick , ,, ,,, , , , ,, , , ,
+*VWRITE,t1,maxstress,Coordofmaxstress,minthic,Coordofminthick , ,, ,,, , , , ,, , , ,
 (5f10.4)
 *CFCLOS
 *END
@@ -139,7 +140,8 @@ SOLVE
 /Post1
 
 RSYS,0
-
+CSYS,0
+!t1=0
 *DO, i, 1, node_count
 test1_step2(i,4,1)=i
 *GET, test1_step2(i,5,1), NODE, i, LOC, X
@@ -147,18 +149,39 @@ test1_step2(i,4,1)=i
 *ENDDO
 
 RSYS,11
+CSYS,11
 
-SHELL, TOP
+
+AVPRIN,1
+SHELL,TOP   
+AVRES,1,
+/EFACET,1   
+LAYER,0 
+FORCE,STATIC
+
 *DO, i, 1, node_count
 *GET, test1_step2(i,1,1), NODE, i, S,Y
 *ENDDO
 
-SHELL, BOT
+
+AVPRIN,1
+SHELL,BOT   
+AVRES,1,
+/EFACET,1   
+LAYER,0 
+FORCE,STATIC
+
 *DO, i, 1, node_count
 *GET, test1_step2(i,2,1), NODE, i, S,Y
 *ENDDO
 
-SHELL, MID
+AVPRIN,1
+SHELL,MID   
+AVRES,1,
+/EFACET,1   
+LAYER,0 
+FORCE,STATIC
+
 *DO, i, 1, node_count
 *GET, test1_step2(i,3,1), NODE, i, S,Y
 *ENDDO
@@ -171,7 +194,7 @@ TH1(i,2,1)=h-(ai+(test1_step2(i,1,1))*mi)*t1-(ao+(test1_step2(i,2,1))*mo)*t1
 FINISH  
 /PREP7  
 sect,1,shell,,shellT
-secdata, h,1,0,3  
+secdata,h,1,0,3  
 secoffset,MID   
 SECFUNCTION, %TH1%, NOD2
 !secf, %TH1%, NOD2  
@@ -207,7 +230,7 @@ Coordofminthick= TH1(coordthick,1)
 *use, ansuitmp
 *VSCFUN, maxstress, MAX, test1_step2(1,1)
 *VSCFUN, coordstress, LMAX, test1_step2(1,1)
-Coordofnaxstress= test1_step2(coordstress,2)
+Coordofmaxstress= test1_step2(coordstress,1)
 !*GET, maxstress, NODE, 32, S,Y
 *use, ansuitmp2
 
