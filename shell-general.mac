@@ -18,26 +18,25 @@ MPTEMP,1,0
 MPDATA,DENS,1,,7800 
 
 
-h=0.5 ! толщина стенки
-h1=0.5
+h=0.1 ! толщина стенки
 R1=5 ! радиус оболочки
 pr=1 !давление
 b=2*R1 !радиус окружности тора
 elemcount=60
 
 ai=0.05
-mi=ai/200
+mi=ai/500
 
-ao=0.05
-mo=ao/200
+ao=0!0.05
+mo=0!ao/500
 
 timesize=0.01 !шаг по времени в задаче
 
 
 K,1,b,0,0,
-CIRCLE, 1, R1-h1*0.5, , , 360, 0
+CIRCLE, 1, R1-h*0.5, , , 360, 0
 LCOMB, 1,2,0
-LCOMB, 2,3,0
+LCOMB, 3,4,0
 
 LOCAL,11,1,b,0,0, , , ,1,1,
 LOCAL,1211,1,b,0,0,90 180 ,90 ,1,1,
@@ -50,8 +49,8 @@ secdata, h,1,0.0,3
 secoffset,MID   
 seccontrol,,,, , , ,
 LESIZE,ALL, , ,elemcount, ,1, , ,1,
-LCLEAR,1 
-LMESH,1 
+LCLEAR,1,3 
+LMESH,1,3 
 
 /SHRINK,0   
 /ESHAPE,1.0 
@@ -61,11 +60,13 @@ LMESH,1
 /REPLOT 
 EPLOT
 SFLDELE,1, ALL
+SFLDELE,3, ALL
 !SFEDELE, ALL, 1, PRES
-DK,2,ROTZ, , ,0,UY, , , , , ,
-DK,4,ROTZ, , ,0,UY, , , , , ,
-
+!D,1,UY, , , , , , , , , ,
+!D,2,UY, , , , , , , , , ,
+CERIG, P, ALL, ALL, , , , 
 SFL,1,PRES,pr, 
+SFL,3,PRES,pr, 
 !ESEL, ALL
 !SFE, ALL,1, PRES
 FINISH  
@@ -78,10 +79,8 @@ RSYS,11
 
 
 
-
-
 *GET, node_count, node, 0, count
-*DIM, test1_step2, array, node_count,8
+*DIM, test1_step2, array, node_count,6
 *DIM, tandem, array, node_count,3
 *DIM,TH1,ARRAY,node_count,2
 !===============================================файлы====================================
@@ -103,8 +102,8 @@ RSYS,11
 
 *CREATE,ansuitmp2
 *CFOPEN, 'D:\resultStress', txt,,append
-*VWRITE,t1,maxstress,Coordofmaxstress,minthic,Coordofminthick ,memofmaxstress ,bendofmaxstress, ,,, , , , ,, , , ,
-(7f10.4)
+*VWRITE,t1,maxstress,Coordofmaxstress,minthic,Coordofminthick , ,, ,,, , , , ,, , , ,
+(5f10.4)
 *CFCLOS
 *END
 
@@ -136,7 +135,7 @@ RSYS,11
 !=============официальный цикл================
 !*DO, h, 0.1, 2, 0.1
 
-*DO, t1, 0, 10, timesize
+*DO, t1, 0, 1.5, 0.01
 FINISH  
 /SOL
 SOLVE
@@ -190,16 +189,6 @@ FORCE,STATIC
 *GET, test1_step2(i,3,1), NODE, i, S,Y
 *ENDDO
 
-
-*DO, i, 1, node_count
-test1_step2(i,7,1) = test1_step2(i,1,1) - test1_step2(i,2,1)
-*ENDDO
-
-*DO, i, 1, node_count
-test1_step2(i,8,1) = 2*(test1_step2(i,1,1) - test1_step2(i,3,1))
-*ENDDO
-
-
 *DO, i, 1, node_count
 TH1(i,1,1)=i
 TH1(i,2,1)=h-(ai+(test1_step2(i,3,1))*mi)*t1-(ao+(test1_step2(i,3,1))*mo)*t1
@@ -226,9 +215,8 @@ EPLOT
 /REPLOT
 SFLDELE,1, ALL
 !SFEDELE, ALL, 1, PRES
-DK,2,ROTZ, , ,0,UY, , , , , ,
-DK,4,ROTZ, , ,0,UY, , , , , ,
-
+D,1,UY, , , , , , , , , ,
+D,2,UY, , , , , , , , , ,
 !SFE, ALL,1, PRES
 SFL,1,PRES,pr, 
 
@@ -243,12 +231,9 @@ SOLVE
 Coordofminthick= TH1(coordthick,1)
 !minthic= TH1(30,2,1)
 *use, ansuitmp
-*VSCFUN, maxstress, MAX, test1_step2(1,2)
-*VSCFUN, coordstress, LMAX, test1_step2(1,2)
-Coordofmaxstress= TH1(coordstress,1)
-memofmaxstress= test1_step2(coordstress,3)
-bendofmaxstress= test1_step2(coordstress,8)
-
+*VSCFUN, maxstress, MAX, test1_step2(1,1)
+*VSCFUN, coordstress, LMAX, test1_step2(1,1)
+Coordofmaxstress= test1_step2(coordstress,1)
 !*GET, maxstress, NODE, 32, S,Y
 *use, ansuitmp2
 
