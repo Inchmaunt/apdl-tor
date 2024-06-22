@@ -11,27 +11,30 @@ KEYOPT,1,9,0
 !*  
 MPTEMP,,,,,,,,  
 MPTEMP,1,0  
-MPDATA,EX,1,,2e11   
+MPDATA,EX,1,,2e5   
 MPDATA,PRXY,1,,0.3  
 MPTEMP,,,,,,,,  
 MPTEMP,1,0  
-MPDATA,DENS,1,,7800 
+MPDATA,DENS,1,,7.8e-6 
 
 
-h=0.5 ! толщина стенки
-h1=0.5
-R1=5 ! радиус оболочки
-pr=1 !давление
+h=4 ! толщина стенки
+h1=4
+R1=50 ! радиус оболочки
+pr=5 !давление
 b=2*R1 !радиус окружности тора
-elemcount=60
+elemcount=120
 
 ai=0.05
-mi=ai/200
+k=1/4
+smax=350
 
-ao=0.05
-mo=ao/200
+mi=ai/(k*smax)
 
-timesize=0.01 !шаг по времени в задаче
+ao=0!0.05
+mo=0!ao/200
+
+timesize=0.05 !шаг по времени в задаче
 
 
 K,1,b,0,0,
@@ -136,7 +139,7 @@ RSYS,11
 !=============официальный цикл================
 !*DO, h, 0.1, 2, 0.1
 
-*DO, t1, 0, 10, timesize
+*DO, t1, 0, 50, timesize
 FINISH  
 /SOL
 SOLVE
