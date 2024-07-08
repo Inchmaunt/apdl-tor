@@ -82,7 +82,7 @@ RSYS,11
 !/DELETE, D:\forlit, txt
 
 *CREATE,ansuitmp18
-*CFOPEN, 'D:\forlit', txt,,append
+*CFOPEN, 'D:\forlit1', txt,,append
 *VWRITE,Rt,rel,stop,smid,sbot,pr , , , ,, , , 
 (6f10.4)
 *CFCLOS
@@ -91,7 +91,7 @@ RSYS,11
 !================================цикл===============================================
 
 !*DO, pr, 1, 10, 1
-*DO, Rt, 2, 40, 0.2
+*DO, Rt, 25, 40, 0.2
 	*DO, rel, 5, 50, 1
     !	*DO, Rt, 2, 40, 0.5
         FINISH  
