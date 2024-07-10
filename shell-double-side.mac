@@ -22,11 +22,11 @@ R1=50 ! радиус оболочки
 h=R1/20 ! толщина стенки
 h1=R1/20
 
-pr=5 !давление
+pr=15 !давление
 b=20*R1 !радиус окружности тора
 elemcount=360
 
-k=8
+k=1/2
 smax=408 !SMAX для случая с b=2 R1 равно 350, для случая с b-20 R1 равно 408
 
 ai=0.05
@@ -35,7 +35,7 @@ mi=ai/(k*smax)
 ao=0.05
 mo=ao/(k*smax)
 
-timesize=0.05 !шаг по времени в задаче
+timesize=0.02 !шаг по времени в задаче
 
 
 K,1,b,0,0,
@@ -175,7 +175,7 @@ FORCE,STATIC
 AVPRIN,1
 SHELL,BOT   
 AVRES,1,
-/EFACET,1   
+/EFACET,1       
 LAYER,0 
 FORCE,STATIC
 
