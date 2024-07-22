@@ -19,11 +19,11 @@ MPDATA,DENS,1,,7.8e-6
 
 R1=50 ! радиус оболочки
 
-h=R1/20 ! толщина стенки
-h1=R1/20
+h=R1/100 ! толщина стенки
+h1=R1/100
 
 pr=5 !давление
-b=20*R1 !радиус окружности тора
+b=50*R1 !радиус окружности тора
 elemcount=480
 
 ai=0.05
@@ -109,8 +109,8 @@ RSYS,11
 
 *CREATE,ansuitmp2
 *CFOPEN, 'D:\resultStress', txt,,append
-*VWRITE,t1,pr,Coordofmaxstress,minthic,Coordofminthick ,memofmaxstress ,bendofmaxstress,limit ,,, , , , ,, , , ,
-(8f10.4)
+*VWRITE,t1,pr,Coordofmaxstress,minthic,Coordofminthick ,memofmaxstress ,bendofmaxstress, ,,, , , , ,, , , ,
+(7f10.4)
 *CFCLOS
 *END
 
