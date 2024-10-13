@@ -11,26 +11,27 @@ KEYOPT,1,9,0
 !*  
 MPTEMP,,,,,,,,  
 MPTEMP,1,0  
-MPDATA,EX,1,,2e11   
+MPDATA,EX,1,,2e5   
 MPDATA,PRXY,1,,0.3  
 MPTEMP,,,,,,,,  
 MPTEMP,1,0  
-MPDATA,DENS,1,,7800 
+MPDATA,DENS,1,,7.8e-6 
 
 
-h=0.1 ! толщина стенки
+h =0.1 ! толщина стенки
 R1=5 ! радиус оболочки
 pr=1 !давление
 b=2*R1 !радиус окружности тора
-elemcount=120
+elemcount=360
 
 ai=0.05
 mi=ai/200
 
 ao=0.05
-mo=0!ao/500
+mo=0
 
 timesize=0.01 !шаг по времени в задаче
+
 
 
 K,1,b,0,0,
@@ -128,7 +129,7 @@ RSYS,11
 
 *CREATE,ansuitmp2
 *CFOPEN, 'D:\resultStress', txt,,append
-*VWRITE,t1,maxstress,,, , ,, ,,, , , , ,, , , ,
+*VWRITE,t1,maxstress,minthic,, , ,, ,,, , , , ,, , , ,
 (2f10.4)
 *CFCLOS
 *END
@@ -173,15 +174,15 @@ SOLVE
 
 *DO, i, 1, node_count
 TH1(i,1,1)=i
-TH1(i,2,1)=h-(0.1+(test1_step2(i,1,1))*0.0005)*t1
+TH1(i,2,1)=h-(ai+(test1_step2(i,1,1))*mi)*t1
 *ENDDO
 
 FINISH  
 /PREP7  
 sect,1,shell,,shellT
 secdata, h,1,0,3  
-secoffset,MID   
-secf,%TH1%,NOD2  
+secoffset,MID  
+SECFUNCTION, %TH1%,NOD2  
 seccontrol,0,0,0, 0, 1, 1, 1
 FLST,2,2,4,ORDE,2   
 FITEM,2,1   
@@ -211,6 +212,7 @@ SOLVE
 !minthic= TH1(30,2,1)
 *use, ansuitmp
 *VSCFUN, maxstress, MAX, test1_step2(1,1)
+Coordofmax = lowcxstress(locstress,2)*180/Pi
 !*GET, maxstress, NODE, 32, S,Y
 *use, ansuitmp2
 
