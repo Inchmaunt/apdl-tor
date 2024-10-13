@@ -32,8 +32,8 @@ R2=50 !наружный радиус сечерия тора
 
 
 hd=5
-h=R2/hd !толщина
 
+h=R2/hd !толщина
 
 r1=R2-h !внутренний радиус сечерия тора
 
@@ -51,7 +51,7 @@ Pi=ACOS(-1)  !число пи
 
 tn = 1000 !техническое число
 
-elemsize=1 !размер разбиения
+elemsize=0.5 !размер разбиения
 
 ! начало решения
 
@@ -104,7 +104,7 @@ PATH,p4,2,30, pathpoints,
 
 CSWPLA,113  
 !*  
-WPOFF,10,0  
+WPOFF,b,0  
 CSWPLA,114,1
 CSCIR,114,1 
 PPATH,1,0,b+r1,0,0   
@@ -138,7 +138,7 @@ CSYS,112
 PATH,pp3,2,30,pathpoints,  
 CSWPLA,115  
 !*  
-WPOFF,10,0  
+WPOFF,b,0  
 CSWPLA,116,1
 CSCIR,116,1 
 PPATH,1,0,b+R2,0,0   
@@ -184,6 +184,7 @@ CSYS,112
 /DELETE, D:\forlit, txt
 /DELETE, D:\resset, txt
 /DELETE, D:\newresset, txt
+/DELETE, D:\graph3data, txt
 !*CREATE,ansuitmp18
 ! *CFOPEN, 'D:\forlit', txt,,append
 ! *VWRITE,Rt,b,h,maxstress_r ,maxstress_R1,pr,po , , , ,, , , 
@@ -205,13 +206,21 @@ CSYS,112
 *CFCLOS
 *END
 
+*CREATE,ansuitmp30
+*CFOPEN, 'D:\graph3data', txt,,append
+*VWRITE, Rt, hd, i_intrados_solid, o_intrados_solid, i_extrados_solid, o_extrados_solid 
+(6f10.4)
+*CFCLOS
+*END
+
 !================================цикл===============================================
 !================================цикл===============================================
 !*DO, h, 1.5,2, 0.1
 !h=0.5
 !*DO, pr, 1, 10, 1
-*DO, Rt, 2, 40, 1
-    *DO, hd, 5, 20, 5
+*DO, hd, 5, 20, 5
+    *DO, Rt, 2, 40, 1
+    
         FINISH  
         /SOL
         !/STATUS,SOLU
@@ -313,12 +322,15 @@ CSYS,112
             *VSCFUN, instressmx, MAX, resset(1,1)
             *VSCFUN, lstrmx, LMAX, resset(1,1)
             inerangmax=resset(lstrmx,4)
-            
+
 
             *VSCFUN, instressmn, MIN, resset(1,1)
             *VSCFUN, lstrmn, LMIN, resset(1,1)
             inerangmin=resset(lstrmn,4)
             
+
+            i_extrados_solid = resset(121,1)
+            i_intrados_solid = resset(1,1)
 
 
         PATH,pp3,2,30,pathpoints,  
@@ -358,7 +370,12 @@ CSYS,112
             *VSCFUN, outstressmin,MIN, resset1(1,1)
             *VSCFUN, lstrmn1, LMIN, resset1(1,1)
             outerangmin = resset1(lstrmn1,4)
+
+            o_extrados_solid = resset1(121,1)
+            o_intrados_solid = resset1(1,1)
+
             *USE, ansuitmp20
+            *USE, ansuitmp30
             *DEL,resset
             *DEL,resset1
         ! K,10,b,0,0

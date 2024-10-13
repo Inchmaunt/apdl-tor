@@ -19,7 +19,7 @@ MPDATA,DENS,1,,7.8e-6
 
 R1=50 ! радиус оболочки
 
-h=R1/40! толщина стенки
+h=R1/20! толщина стенки
 
 pr=1 !давление
 
@@ -83,7 +83,7 @@ RSYS,11
 
 *CREATE,ansuitmp18
 *CFOPEN, 'D:\forlit1', txt,,append
-*VWRITE,Rt,rel,stop,smid,sbot,pr , , , ,, , , 
+*VWRITE,Rt,rel,stop,smid,sbot,pr, , ,, , , 
 (6f10.4)
 *CFCLOS
 *END
@@ -91,8 +91,8 @@ RSYS,11
 !================================цикл===============================================
 
 !*DO, pr, 1, 10, 1
-*DO, Rt, 2, 5, 0.1
-	*DO, rel, 5, 50, 1
+*DO, rel, 5, 20, 5
+	*DO, Rt, 2, 40, 1
     !	*DO, Rt, 2, 40, 0.5
         FINISH  
         /SOL
@@ -162,7 +162,7 @@ RSYS,11
         FORCE,STATIC
 
 
-        *GET, stop, NODE, 2, S,Y
+        *GET, stop, NODE, 1, S,Y
 
 
 
@@ -173,7 +173,7 @@ RSYS,11
         LAYER,0 
         FORCE,STATIC
 
-        *GET, sbot, NODE, 2, S,Y
+        *GET, sbot, NODE, 1, S,Y
 
 
         AVPRIN,1
@@ -182,7 +182,7 @@ RSYS,11
         /EFACET,1   
         LAYER,0 
         FORCE,STATIC
-        *GET, smid, NODE, 2, S,Y
+        *GET, smid, NODE, 1, S,Y
         *use, ansuitmp18
 
 
