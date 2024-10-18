@@ -51,7 +51,7 @@ Pi=ACOS(-1)  !число пи
 
 tn = 1000 !техническое число
 
-elemsize=1 !размер разбиения
+elemsize=0.5 !размер разбиения
 
 ! начало решения
 
@@ -187,8 +187,8 @@ CSYS,112
 
 *CREATE,ansuitmp18
 *CFOPEN, 'D:\forlit', txt,,append
-*VWRITE,Rt,b,maxstress_r ,maxstress_R1,pr,po , , , ,, , , 
-(7f10.4)
+*VWRITE,Rt,hd,maxstress_r ,maxstress_R1,and_max_r,and_max_R, , , ,, , , 
+(6f10.4)
 *CFCLOS
 *END
 
@@ -211,8 +211,8 @@ CSYS,112
 !*DO, h, 1.5,2, 0.1
 !h=0.5
 !*DO, pr, 1, 10, 1
-*DO, Rt, 2, 40, 1
-    *DO, hd, 5, 20, 5
+*DO, Rt, 2, 40, 0.2
+    *DO, hd, 5, 50, 1
         FINISH  
         /SOL
         !/STATUS,SOLU
@@ -359,7 +359,13 @@ CSYS,112
             *VSCFUN, outstressmin,MIN, resset1(1,1)
             *VSCFUN, lstrmn1, LMIN, resset1(1,1)
             outerangmin = resset1(lstrmn1,4)
-            *USE, ansuitmp20
+            !*USE, ansuitmp20
+
+            maxstress_r=resset(121,1)
+            maxstress_R1=resset1(121,1)
+            and_max_r=resset(121,4)
+            and_max_R= resset1(121,4)
+            *USE, ansuitmp18
             *DEL,resset
             *DEL,resset1
         ! K,10,b,0,0
