@@ -1,0 +1,222 @@
+/PREP7  
+ 
+ET,1,PLANE182   
+
+KEYOPT,1,1,0
+KEYOPT,1,3,1
+KEYOPT,1,6,0
+
+!*  
+!*  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,EX,1,,2e5   
+MPDATA,PRXY,1,,0.3  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,DENS,1,,7800e-9 
+
+!LOCAL,11,1,10,0,0, , , ,1,1,
+!==================================================перечитать задачу==============================
+/PREP7
+LSCLEAR,ALL 
+ACLEAR,1
+ADELE, ALL
+LDELE,All
+KDELE,All
+CSYS,0 
+!дано
+h=0.05 !толщина
+
+R2=5 !наружный радиус сечерия тора
+
+r1=R2-h !внутренний радиус сечерия тора
+
+!Rt=4
+Rt=40
+
+b=Rt*R2 !радиус окружности тора
+
+pr=1 !давление внутреннее
+po=0 !давление внешнее
+
+elemcount=480 !число разбиений сетки
+
+Pi=ACOS(-1)  !число пи
+
+tn = 1000 !техническое число
+
+elemsize=0.025
+
+
+K,10,b,0,0
+
+CIRCLE, 10, R2, , , 180, 0
+CIRCLE, 10, r1, , , 180, 0
+
+LSTR, 1, 4
+LSTR, 3, 6
+
+
+AL,ALL
+AESIZE,1,elemsize
+AMESH,1
+
+LOCAL,112,1,b,0,0, , , ,1,1,
+NROTAT,ALL
+LSCLEAR,ALL
+
+SFL,3,PRES,pr,
+SFL,4,PRES,pr,
+
+DL,5,1, UY, ,  
+DL,6,1, UY, ,  
+
+CSYS,0 
+CSYS,112
+
+FINISH  
+/SOL
+!/STATUS,SOLU
+SOLVE
+/Post1
+RSYS,112
+!===============================================файлы===============================================
+
+!/DELETE, D:\forlit, txt
+
+*CREATE,ansuitmp18
+*CFOPEN, 'D:\forlit', txt,,append
+*VWRITE,Rt,b,h,maxstress_r ,maxstress_R1,pr,po , , , ,, , , 
+(7f10.4)
+*CFCLOS
+*END
+!================================цикл===============================================
+!================================цикл===============================================
+!*DO, h, 1.5,2, 0.1
+
+!*DO, pr, 1, 10, 1
+!*DO, Rt, 12, 40, 0.2
+	*DO, h, 0.1, 1, 0.2
+!	*DO, Rt, 2, 40, 0.5
+FINISH  
+/SOL
+!/STATUS,SOLU
+
+b=Rt*R2 !радиус окружности тора
+r1=R2-h
+SOLVE
+/POST1
+RSYS,112
+
+
+
+/PREP7
+LSCLEAR,ALL 
+ACLEAR,1
+ADELE, ALL
+LDELE,All
+KDELE,All
+CSYS,0 
+
+K,10,b,0,0
+
+CIRCLE, 10, R2, , , 180, 0
+CIRCLE, 10, r1, , , 180, 0
+
+LSTR, 1, 4
+LSTR, 3,6
+
+
+AL,ALL
+AESIZE,1,elemsize
+AMESH,1
+
+LOCAL,112,1,b,0,0, , , ,1,1,
+NROTAT,ALL
+LSCLEAR,ALL
+
+SFL,3,PRES,pr,
+SFL,4,PRES,pr,
+
+DL,5,1, UY, ,  
+DL,6,1, UY, ,  
+
+CSYS,0 
+CSYS,112
+
+FINISH  
+/SOL
+SOLVE
+/POST1
+RSYS,112
+
+
+
+!*GET, maxstress_r, NODE, 632, S,Y
+!*GET, maxstress_R1, NODE, 317, S,Y
+
+*GET, maxstress_r, NODE, 632, S,Y
+*GET, maxstress_R1, NODE, 317, S,Y
+*use, ansuitmp18
+
+
+!*ENDDO
+*ENDDO
+
+EPLOT   
+/REPLOT
+
+! *DO, i, 0, elemcount,1
+! lowcXcyl(i+1,1,1) = Pi/elemcount*i
+! lowcXcyl(i+1,2,1) = b+(R2-h)*COS(Pi/elemcount*i)
+! lowcXcyl(i+1,3,1) = (R2-h)*SIN( Pi/elemcount*i)
+! K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+! *ENDDO 
+
+! *DO, i, 1, elemcount,1
+! LSTR, i, i+1
+! *ENDDO 
+
+
+! *DO, i, 0, elemcount,1
+! highcXcyl(i+1,1,1) = Pi/elemcount*i
+! highcXcyl(i+1,2,1) = b+R2*COS(Pi/elemcount*i)
+! highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
+! K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+! *ENDDO 
+
+! *DO, i, 1, elemcount,1
+! LSTR, i+tn, i+1+tn
+! *ENDDO 
+! LSTR, 1, 1+tn
+! LSTR, elemcount+1, elemcount+1+tn
+! LESIZE,ALL, , ,1, , , , ,1 
+
+! LESIZE,elemcount+elemcount+1, , ,4, , , , ,1 
+! LESIZE,elemcount+elemcount+2, , ,4, , , , ,1 
+! AL,ALL
+! AMESH,1
+
+
+! LOCAL,112,1,b,0,0, , , ,1,1,
+! NROTAT,ALL
+! LSCLEAR,ALL 
+
+
+! *DO, i, 1, elemcount,1
+! SFL,i,PRES,pr,
+! *ENDDO
+
+! *DO, i, elemcount+1, elemcount+elemcount,1
+! SFL,i,PRES,po,
+! *ENDDO
+
+! DL,elemcount+elemcount+1,1, UY, ,  
+! DL,elemcount+elemcount+2,1, UY, ,  
+
+! CSYS,0 
+! CSYS,112
+
+
+

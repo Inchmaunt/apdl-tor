@@ -42,8 +42,8 @@ Rt=2
 
 b=Rt*R2 !радиус окружности тора
 
-pr=1 !давление внутреннее
-po=0 !давление внешнее
+pr=0 !давление внутреннее
+po=1 !давление внешнее
 
 elemcount=480 !число разбиений сетки
 
@@ -72,8 +72,12 @@ LOCAL,112,1,b,0,0, , , ,1,1,
 NROTAT,ALL
 LSCLEAR,ALL
 
-SFL,3,PRES,pr,
-SFL,4,PRES,pr,
+
+SFL,1,PRES,po,
+SFL,2,PRES,po,
+!SFL,3,PRES,pr,
+!SFL,4,PRES,pr,
+
 
 DL,5,1, UY, ,  
 DL,6,1, UY, ,  
@@ -211,8 +215,9 @@ CSYS,112
 !*DO, h, 1.5,2, 0.1
 !h=0.5
 !*DO, pr, 1, 10, 1
-*DO, Rt, 2, 50, 0.1
-    *DO, hd, 5, 50, 1
+*DO, hd, 5, 20, 5
+    *DO, Rt, 2, 40, 1
+    
         FINISH  
         /SOL
         !/STATUS,SOLU
@@ -257,8 +262,11 @@ CSYS,112
         NROTAT,ALL
         LSCLEAR,ALL
 
-        SFL,3,PRES,pr,
-        SFL,4,PRES,pr,
+
+        SFL,1,PRES,po,
+        SFL,2,PRES,po,
+       ! SFL,3,PRES,pr,
+       ! SFL,4,PRES,pr,
 
         DL,5,1, UY, ,  
         DL,6,1, UY, ,  

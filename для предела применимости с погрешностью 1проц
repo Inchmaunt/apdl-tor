@@ -51,7 +51,7 @@ Pi=ACOS(-1)  !число пи
 
 tn = 1000 !техническое число
 
-elemsize=0.5 !размер разбиения
+elemsize=1 !размер разбиения
 
 ! начало решения
 
@@ -72,8 +72,12 @@ LOCAL,112,1,b,0,0, , , ,1,1,
 NROTAT,ALL
 LSCLEAR,ALL
 
+
+!SFL,1,PRES,po,
+!SFL,2,PRES,po,
 SFL,3,PRES,pr,
 SFL,4,PRES,pr,
+
 
 DL,5,1, UY, ,  
 DL,6,1, UY, ,  
@@ -187,8 +191,8 @@ CSYS,112
 
 *CREATE,ansuitmp18
 *CFOPEN, 'D:\forlit', txt,,append
-*VWRITE,Rt,hd,maxstress_r ,maxstress_R1,and_max_r,and_max_R, , , ,, , , 
-(6f10.4)
+*VWRITE,Rt,hd,intrastress_i, intrastress_o, inerangmax, outerangmax, error_i, error_o,
+(8f10.4)
 *CFCLOS
 *END
 
@@ -201,8 +205,8 @@ CSYS,112
 
 *CREATE,ansuitmp20
 *CFOPEN, 'D:\newresset', txt,,append
-*VWRITE, b, hd, instressmx, inerangmax, instressmn, inerangmin, outstressmax, outerangmax, outstressmin, outerangmin 
-(10f10.4)
+*VWRITE, Rt, hd, instressmx, inerangmax, error_i, outstressmax, outerangmax, error_o
+(8f10.4)
 *CFCLOS
 *END
 
@@ -211,8 +215,10 @@ CSYS,112
 !*DO, h, 1.5,2, 0.1
 !h=0.5
 !*DO, pr, 1, 10, 1
-*DO, Rt, 2, 50, 0.1
-    *DO, hd, 5, 50, 1
+*DO, Rt, 12, 17, 1
+    *DO, hd, 30, 60, 1
+    
+    
         FINISH  
         /SOL
         !/STATUS,SOLU
@@ -257,6 +263,9 @@ CSYS,112
         NROTAT,ALL
         LSCLEAR,ALL
 
+
+        !SFL,1,PRES,po,
+        !SFL,2,PRES,po,
         SFL,3,PRES,pr,
         SFL,4,PRES,pr,
 
@@ -359,12 +368,16 @@ CSYS,112
             *VSCFUN, outstressmin,MIN, resset1(1,1)
             *VSCFUN, lstrmn1, LMIN, resset1(1,1)
             outerangmin = resset1(lstrmn1,4)
-            !*USE, ansuitmp20
+            
 
-            maxstress_r=resset(121,1)
-            maxstress_R1=resset1(121,1)
+            intrastress_i=resset(121,1)
+            intrastress_o=resset1(121,1)
             and_max_r=resset(121,4)
             and_max_R= resset1(121,4)
+
+            error_i=100*(instressmx-intrastress_i)/instressmx
+            error_o=100*(outstressmax-intrastress_o)/outstressmax
+            !*USE, ansuitmp20
             *USE, ansuitmp18
             *DEL,resset
             *DEL,resset1
