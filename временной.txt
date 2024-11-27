@@ -1,0 +1,286 @@
+/NOPR   ! Suppress printing of UNDO process 
+/PMACRO ! Echo following commands to log    
+FINISH  ! Make sure we are at BEGIN level   
+/CLEAR,NOSTART  ! Clear model since no SAVE found   
+! WE SUGGEST YOU REMOVE THIS LINE AND THE FOLLOWING STARTUP LINES   
+! WE SUGGEST YOU REMOVE THIS LINE AND THE FOLLOWING STARTUP LINES   
+! WE SUGGEST YOU REMOVE THIS LINE AND THE FOLLOWING STARTUP LINES   
+! WE SUGGEST YOU REMOVE THIS LINE AND THE FOLLOWING STARTUP LINES   
+/input,menust,tmp,''
+/GRA,POWER  
+/GST,ON 
+/PLO,INFO,3 
+/GRO,CURL,ON
+/CPLANE,1   
+/REPLOT,RESIZE  
+WPSTYLE,,,,,,,,0
+/PREP7  
+!*  
+ET,1,SHELL208   
+!*  
+KEYOPT,1,1,0
+KEYOPT,1,2,0
+KEYOPT,1,3,0
+KEYOPT,1,8,0
+KEYOPT,1,9,0
+!*  
+!*  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,EX,1,,2e11   
+MPDATA,PRXY,1,,0.3  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,DENS,1,,7800 
+sect,1,shell,,shellT
+secdata, 0.1,1,0.0,3
+secoffset,MID   
+seccontrol,,,, , , ,
+FLST,2,2,8  
+FITEM,2,10,0,0  
+FITEM,2,5,0,0   
+CIRCLE,P51X, , , ,180, ,
+FLST,3,2,4,ORDE,2   
+FITEM,3,1   
+FITEM,3,-2  
+LSYMM,Y,P51X, , , ,0,1  
+TYPE,   1   
+MAT,       1
+REAL,   
+ESYS,       0   
+SECNUM,   1 
+!*  
+KATT,       1, ,   1,       0   
+!*  
+LATT,1, ,1, , , ,1  
+FLST,2,2,4,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+LCOMB,P51X, ,0  
+!*  
+LESIZE,ALL, , ,12, ,1, , ,1,
+LMESH,       1  
+NPLOT   
+/PNUM,KP,0  
+/PNUM,LINE,0
+/PNUM,AREA,0
+/PNUM,VOLU,0
+/PNUM,NODE,1
+/PNUM,TABN,0
+/PNUM,SVAL,0
+/PNUM,DOMA,0
+/NUMBER,0   
+!*  
+/PNUM,ELEM,0
+/REPLOT 
+!*  
+/PNUM,KP,0  
+/PNUM,LINE,0
+/PNUM,AREA,0
+/PNUM,VOLU,0
+/PNUM,NODE,1
+/PNUM,TABN,0
+/PNUM,SVAL,0
+/PNUM,DOMA,0
+/NUMBER,0   
+!*  
+/PNUM,ELEM,0
+/REPLOT 
+!*  
+FLST,2,2,1,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+!*  
+/GO 
+D,P51X,UY, , , , , , , , , ,
+FLST,2,1,4,ORDE,1   
+FITEM,2,1   
+/GO 
+!*  
+SFL,P51X,PRES,-1,   
+EPLOT  
+ 
+!==============================простая сетка толщиной 0.1===================================
+
+!sect,1,shell,,shellT
+!secdata, 0.1,1,0,3  
+!secoffset,MID   
+!seccontrol,0,0,0, 0, 1, 1, 1
+
+FINISH  
+/PREP7  
+LESIZE,ALL, , ,12, ,1, , ,1, 
+FLST,2,2,4,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+
+sect,1,shell,,shellT
+secdata, 0.1,1,0,3  
+secoffset,MID   
+seccontrol,0,0,0, 0, 1, 1, 1
+FLST,2,2,4,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+LCLEAR,P51X 
+FLST,2,2,4,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+LMESH,P51X  
+!==============================простая сетка=================================================
+
+
+FINISH  
+/SOL
+!/STATUS,SOLU
+SOLVE
+
+*GET, node_count, node, 0, count
+!*GET, thicc, SHEL, 1, PROP, TTHK
+
+!*IF thicc, GT, 0.05, THEN
+*DIM, test1_step2, array, node_count,1
+
+*DO, i, 1, node_count
+*GET, test1_step2(i,1,1), NODE, i, S,X
+*ENDDO
+
+*STATUS, test1_step2
+
+*DIM,TH1,ARRAY,node_count,2
+*DO, i, 1, node_count
+TH1(i,1,1)=i
+TH1(i,2,1)=0.1-test1_step2(i,1,1)*0.0008
+*ENDDO
+*STATUS, TH1
+
+*DO,i,1, node_count
+*VSCFUN, minthic, MIN, TH1(i,2)
+*ENDDO
+
+*DO,i,1, node_count
+*VSCFUN, maxstress, MAX, test1_step2(i,1)
+*ENDDO
+
+minthicforcycle = minthic+0.05
+!==============================предварительная отметка=================================================
+
+!==============================цикл===========================================================================
+
+*DOWHILE, minthicforcycle
+
+*DO, i, 1, node_count
+*GET, test1_step2(i,1,1), NODE, i, S,X
+*ENDDO
+*STATUS, test1_step2
+
+*DO, i, 1, node_count
+TH1(i,1,1)=i
+TH1(i,2,1)=0.1-test1_step2(i,1,1)*0.0008
+*ENDDO
+*STATUS, TH1
+
+FINISH  
+/PREP7  
+sect,1,shell,,shellT
+secdata, 0.1,1,0,3  
+secoffset,MID   
+secf,%TH1%,NOD2  
+seccontrol,0,0,0, 0, 1, 1, 1
+FLST,2,2,4,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+LCLEAR,P51X 
+FLST,2,2,4,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+LMESH,P51X  
+
+FINISH  
+/SOL
+!/STATUS,SOLU
+SOLVE
+
+*DO,i,1, node_count
+*VSCFUN, minthic, MIN, TH1(i,2)
+*ENDDO
+
+*DO,i,1, node_count
+*VSCFUN, maxstress, MAX, test1_step2(i,1)
+*ENDDO
+
+!*STATUS, test1_step2
+
+!*STATUS, TH1
+
+*ENDDO
+!==============================временная задача==============================
+*DEL,_FNCNAME   
+*DEL,_FNCMTID   
+*DEL,_FNCCSYS   
+*SET,_FNCNAME,'Timedep' 
+*SET,_FNCCSYS,0 
+! /INPUT,timedependence.func,,,1
+*DIM,%_FNCNAME%,TABLE,6,5,1,,,,%_FNCCSYS%   
+!   
+! Begin of equation: 0.1-0.001*{TIME}   
+*SET,%_FNCNAME%(0,0,1), 0.0, -999   
+*SET,%_FNCNAME%(2,0,1), 0.0 
+*SET,%_FNCNAME%(3,0,1), 0.0 
+*SET,%_FNCNAME%(4,0,1), 0.0 
+*SET,%_FNCNAME%(5,0,1), 0.0 
+*SET,%_FNCNAME%(6,0,1), 0.0 
+*SET,%_FNCNAME%(0,1,1), 1.0, -1, 0, 0.001, 0, 0, 1  
+*SET,%_FNCNAME%(0,2,1), 0.0, -2, 0, 1, -1, 3, 1 
+*SET,%_FNCNAME%(0,3,1),   0, -1, 0, 0.1, 0, 0, -2   
+*SET,%_FNCNAME%(0,4,1), 0.0, -3, 0, 1, -1, 2, -2
+*SET,%_FNCNAME%(0,5,1), 0.0, 99, 0, 1, -3, 0, 0 
+! End of equation: 0.1-0.001*{TIME} 
+!-->
+sect,1,shell,,shellT
+secdata, 0.1,1,0,3  
+secoffset,MID   
+secf,%TIMEDEP%, 
+seccontrol,0,0,0, 0, 1, 1, 1
+FLST,2,2,4,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+LCLEAR,P51X 
+FLST,2,2,4,ORDE,2   
+FITEM,2,1   
+FITEM,2,-2  
+LMESH,P51X  
+
+FINISH  
+
+/SOL
+
+ANTYPE,4
+!*  
+TRNOPT,FULL 
+LUMPM,0 
+!*  
+DELTIM,1,0,0
+OUTRES,ERASE
+OUTRES,ALL,ALL  
+NSUBST,10  
+KBC,0   
+
+*do,i,1,50,1
+
+SECFUNCTION, %TIMEDEP%
+SFL,P51X,PRES, -1
+TIME,i
+
+SOLVE
+*ENDDO
+/POST26 
+NUMVAR,1000
+
+FILLDATA,2,,,,1,1 
+REALVAR,2,2 
+PRNSOL,S, COMP
+FINISH
+
+RESET   
+)/GOP    ! Resume printing after UNDO process   
+)! We suggest a save at this point  

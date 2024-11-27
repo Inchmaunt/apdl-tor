@@ -26,31 +26,39 @@ LDELE,All
 KDELE,All
 CSYS,0 
 
-
 !==================дано==================
 
-h=0.1     !толщина
 
-R2=5      !наружный радиус сечерия тора
+R2=50 !наружный радиус сечерия тора
 
-r1=R2-h   !внутренний радиус сечерия тора
+h=R2/20 !толщина
 
-b=2*R2    !радиус окружности тора
+r1=R2-h !внутренний радиус сечерия тора
 
-pr=1     !давление внутреннее
-po=0     !давление внешнее
+b=10*R2 !радиус окружности тора
 
-elemcount=120  !число разбиений сетки
+smax=450 !SMAX для случая с b=2 R1 равно 350, для случая с b-20 R1 равно 408
+iniload=0.25 !коэффициент начального нагружения (в долях процента, для процента надо домножить на 100)
 
-Pi=ACOS(-1)    !число пи
 
-tn=1000        !техническое число
+pr=(h*smax*iniload)/R2 !давление
+po=1e-6
+
+elemcount=180 !число разбиений сетки
+
+Pi=ACOS(-1)  !число пи
+
+tn = 1000 !техническое число
+
+k=1/2
+
+
 
 ai=0.05
-mi=ai/500
+mi=ai/(k*smax)
 
-ao=0!0.05
-mo=0!ao/500
+ao=0.05
+mo=ao/(k*smax)
 
 timesize=0.01 !шаг по времени в задаче
 
@@ -168,173 +176,194 @@ SOLVE
 
 *CREATE,ansuitmp15
 *CFOPEN, 'D:\doubleside', txt,,append
-*VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,, ,,, , , , ,, , , ,
-(6f10.4)
+*VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,k,halfof,iniload,, , , , ,, , , ,
+(9f10.4)
 *CFCLOS
 *END
 
 !================================цикл===============================================
-!*DO, h, 1.5,2, 0.1
+*DO, iniload, 0.25,0.75, 0.25
+    *DO, k, 1, 8, 3
+        h2=h*0.1
+        *DO, t1, 0, 30, timesize
 
-*DO, t1, 0, 3.5, timesize
-
-    !определяем напряжения в узлах на поверхности
-    !t1=0
-    /POST1
-    RSYS,112
-    CSYS,112
-
-
-
-    ! *GET, nodecount, NODE, 0, COUNT
-    ! *DIM, nodecoords, array, nodecount, 3
-    ! *DIM, newcoords, array, nodecount, 3
-
-    !     *DO, i, 1, nodecount,1
-    !         *GET, nodecoords(i,1,1), NODE, i, LOC, X
-    !         *GET, nodecoords(i,2,1), NODE, i, LOC, Y
-    !     *ENDDO
+            !определяем напряжения в узлах на поверхности
+            !t1=0.07
+            /POST1
+            RSYS,112
+            CSYS,112
 
 
-    !     *DO, i, 1, nodecount,1
-    !         *IF, nodecoords(i,1,1), EQ, R2-h,THEN
-    !             newcoords(i,1,1)=nodecoords(i,1,1)
-    !             newcoords(i,2,1)=nodecoords(i,2,1)
-    !         *ELSE
-    !             newcoords(i,1,1)=0
-    !             newcoords(i,2,1)=0
-    !         *ENDIF
-    !     *ENDDO
 
-    *DO, i, 0, elemcount,1
-        *GET, lowcxstress(i+1,1,1), NODE, i+1, S,Y
-        lowcxstress(i+1,2,1) = Pi/elemcount*i
-        
-        *IF, lowcxstress(i+1,1,1), LT, 0, THEN
-            lowcxstress(i+1,3,1)=-lowcxstress(i+1,1,1)
-            *ELSE
-            lowcxstress(i+1,3,1)=lowcxstress(i+1,1,1)
-        *ENDIF
+            ! *GET, nodecount, NODE, 0, COUNT
+            ! *DIM, nodecoords, array, nodecount, 3
+            ! *DIM, newcoords, array, nodecount, 3
+
+            !     *DO, i, 1, nodecount,1
+            !         *GET, nodecoords(i,1,1), NODE, i, LOC, X
+            !         *GET, nodecoords(i,2,1), NODE, i, LOC, Y
+            !     *ENDDO
+
+
+            !     *DO, i, 1, nodecount,1
+            !         *IF, nodecoords(i,1,1), EQ, R2-h,THEN
+            !             newcoords(i,1,1)=nodecoords(i,1,1)
+            !             newcoords(i,2,1)=nodecoords(i,2,1)
+            !         *ELSE
+            !             newcoords(i,1,1)=0
+            !             newcoords(i,2,1)=0
+            !         *ENDIF
+            !     *ENDDO
+
+            *DO, i, 0, elemcount,1
+                *GET, lowcxstress(i+1,1,1), NODE, i+1, S,Y
+                lowcxstress(i+1,2,1) = Pi/elemcount*i
+                
+                *IF, lowcxstress(i+1,1,1), LT, 0, THEN
+                    lowcxstress(i+1,3,1)=-lowcxstress(i+1,1,1)
+                    *ELSE
+                    lowcxstress(i+1,3,1)=lowcxstress(i+1,1,1)
+                *ENDIF
+            *ENDDO
+            
+            !================================первое напряжение============================
+            !================================первое напряжение============================
+            !================================первое напряжение============================
+
+            *IF, t1, EQ, 0.01, THEN
+
+                *VSCFUN, initialstress, MAX, lowcxstress(1,1)
+
+                *ELSE
+
+                *DO, i, 0, elemcount,1
+                    *GET, highcxstress(i+1,1,1), NODE, elemcount+i+1+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
+                    highcxstress(i+1,2,1) = Pi/elemcount*i
+
+                    *IF, highcxstress(i+1,1,1), LT, 0, THEN
+                        highcxstress(i+1,3,1)=-highcxstress(i+1,1,1)
+                        *ELSE
+                        highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
+                    *ENDIF
+                *ENDDO
+
+                !вычисляем новую геометрию по коррозии
+                *DO, i, 0, elemcount, 1
+                    lowcxcorrosion(i+1,1,1) = Pi/elemcount*i
+                    lowcxcorrosion(i+1,2,1) = b+((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(Pi/elemcount*i)
+                    lowcxcorrosion(i+1,3,1) = ((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*SIN(Pi/elemcount*i)
+                *ENDDO
+
+
+                *DO, i, 0, elemcount, 1
+                    highcxcorrosion(i+1,1,1) = Pi/elemcount*i
+                    highcxcorrosion(i+1,2,1) = b+(R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*COS(Pi/elemcount*i)
+                    highcxcorrosion(i+1,3,1) = (R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*SIN(Pi/elemcount*i)
+                *ENDDO
+
+
+                *DO, i, 0, elemcount, 1
+                    thickness(i+1,1,1) = Pi/elemcount*i
+                    thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+                    thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
+                *ENDDO
+
+                !удаляем старое и перестраиваем
+                /PREP7
+                LSCLEAR,ALL 
+                ACLEAR,1
+                ADELE, ALL
+                LDELE,All
+                KDELE,All
+                CSYS,0 
+
+                *DO, i, 0, elemcount,1
+                    K,i+1,lowcxcorrosion(i+1,2,1),lowcxcorrosion(i+1,3,1),0,
+                *ENDDO
+
+                *DO, i, 1, elemcount,1
+                    LSTR, i, i+1
+                *ENDDO
+
+                *DO, i, 0, elemcount,1
+                    K,i+tn+1,highcxcorrosion(i+1,2,1),highcxcorrosion(i+1,3,1),0,
+                *ENDDO
+
+                *DO, i, 1, elemcount,1
+                    LSTR, i+tn, i+1+tn
+                *ENDDO
+
+                *DO, i, 1, elemcount,1
+                    LSTR, i+tn, i+1+tn
+                *ENDDO
+
+                LSTR, 1, tn+1
+                LSTR, elemcount+1, elemcount+1+tn
+
+                LESIZE,ALL, , ,1, , , , ,1
+                LESIZE,elemcount*2+1, , ,linesize, , , , ,1
+                LESIZE,elemcount*2+2, , ,linesize, , , , ,1 
+                ! AESIZE, 1, meshsize,
+                AL,ALL
+                AMESH,1
+
+                !граничные условия в цилиндрической системе
+
+                LOCAL,112,1,b,0,0, , , ,1,1,
+                NROTAT,ALL
+                LSCLEAR,ALL 
+                
+                *DO, i, 1, elemcount,1
+                    SFL,i,PRES,pr,
+                *ENDDO
+
+                *DO, i, elemcount+1, elemcount+elemcount,1
+                    SFL,i,PRES,po,
+                *ENDDO
+
+                DL,elemcount*2+1,1, UY, ,  
+                DL,elemcount*2+2,1, UY, ,  
+
+
+                CSYS,0 
+                CSYS,112
+                !переходим в обычную СК и решаем
+
+                CSYS,0 
+                FINISH  
+                /SOL
+                SOLVE
+
+                !результаты (время, максимальное напряжение в узле, координата узла, минимальная толщина в узле)
+                
+                !массивы для расчета напряжений
+                *VSCFUN, DEPmaxstress, MAX, lowcxstress(1,3)
+                *VSCFUN, DEPmaxstressouter, MAX, highcxstress(1,3)
+
+                !max напряжения на внутренней поверхности
+                *VSCFUN, locstress, LMAX, lowcxstress(1,3)
+                Coordofmax = lowcxstress(locstress,2)*180/Pi
+
+                !max напряжения на внешней поверхности
+                *VSCFUN, locstressouter, LMAX, highcxstress(1,3)
+                Coordofmaxouter = highcxstress(locstressouter,2)*180/Pi   
+
+                !расчет толщины
+                *VSCFUN, DEPminthick, MIN, thickness(1,3)
+                *VSCFUN, locminthick, LMIN, thickness(1,3)
+                Coordofminthick = thickness(locminthick,2)
+
+                halfof=(DEPmaxstress/smax*100-initialstress/smax*100)/(100-initialstress/smax*100)
+
+                *use, ansuitmp14
+                *use, ansuitmp15
+                *use, ansuitmp12
+                
+               
+                *ENDIF
+            *IF, DEPminthick,LT,h2,OR,DEPmaxstress,GT,smax,EXIT
+        *ENDDO
+        EPLOT   
+        /REPLOT
     *ENDDO
-    
-    *DO, i, 0, elemcount,1
-        *GET, highcxstress(i+1,1,1), NODE, elemcount+i+1+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
-        highcxstress(i+1,2,1) = Pi/elemcount*i
-
-        *IF, highcxstress(i+1,1,1), LT, 0, THEN
-            highcxstress(i+1,3,1)=-highcxstress(i+1,1,1)
-            *ELSE
-            highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
-        *ENDIF
-    *ENDDO
-
-    !вычисляем новую геометрию по коррозии
-    *DO, i, 0, elemcount, 1
-        lowcxcorrosion(i+1,1,1) = Pi/elemcount*i
-        lowcxcorrosion(i+1,2,1) = b+((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(Pi/elemcount*i)
-        lowcxcorrosion(i+1,3,1) = ((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*SIN(Pi/elemcount*i)
-    *ENDDO
-
-
-    *DO, i, 0, elemcount, 1
-        highcxcorrosion(i+1,1,1) = Pi/elemcount*i
-        highcxcorrosion(i+1,2,1) = b+(R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*COS(Pi/elemcount*i)
-        highcxcorrosion(i+1,3,1) = (R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*SIN(Pi/elemcount*i)
-    *ENDDO
-
-
-  *DO, i, 0, elemcount, 1
-        thickness(i+1,1,1) = Pi/elemcount*i
-        thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
-        thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
-    *ENDDO
-
-    !удаляем старое и перестраиваем
-    /PREP7
-    LSCLEAR,ALL 
-    ACLEAR,1
-    ADELE, ALL
-    LDELE,All
-    KDELE,All
-    CSYS,0 
-
-    *DO, i, 0, elemcount,1
-        K,i+1,lowcxcorrosion(i+1,2,1),lowcxcorrosion(i+1,3,1),0,
-    *ENDDO
-
-    *DO, i, 1, elemcount,1
-        LSTR, i, i+1
-    *ENDDO
-
-    *DO, i, 0, elemcount,1
-        K,i+tn+1,highcxcorrosion(i+1,2,1),highcxcorrosion(i+1,3,1),0,
-    *ENDDO
-
-    *DO, i, 1, elemcount,1
-        LSTR, i+tn, i+1+tn
-    *ENDDO
-
-    *DO, i, 1, elemcount,1
-        LSTR, i+tn, i+1+tn
-    *ENDDO
-
-    LSTR, 1, tn+1
-    LSTR, elemcount+1, elemcount+1+tn
-
-    LESIZE,ALL, , ,1, , , , ,1
-    LESIZE,elemcount*2+1, , ,linesize, , , , ,1
-    LESIZE,elemcount*2+2, , ,linesize, , , , ,1 
-   ! AESIZE, 1, meshsize,
-    AL,ALL
-    AMESH,1
-
-    !граничные условия в цилиндрической системе
-
-    LOCAL,112,1,b,0,0, , , ,1,1,
-    NROTAT,ALL
-    LSCLEAR,ALL 
-    *DO, i, 1, elemcount,1
-        SFL,i,PRES,pr,
-    *ENDDO
-
-    *DO, i, elemcount, elemcount+elemcount,1
-        SFL,i,PRES,po,
-    *ENDDO
-
-    DL,elemcount*2+1,1, UY, ,
-    DL,elemcount*2+2,1, UY, ,
-
-    !переходим в обычную СК и решаем
-
-    CSYS,0 
-    FINISH  
-    /SOL
-    SOLVE
-
-    !результаты (время, максимальное напряжение в узле, координата узла, минимальная толщина в узле)
-    
-    !массивы для расчета напряжений
-    *VSCFUN, DEPmaxstress, MAX, lowcxstress(1,3)
-    *VSCFUN, DEPmaxstressouter, MAX, highcxstress(1,3)
-
-    !max напряжения на внутренней поверхности
-    *VSCFUN, locstress, LMAX, lowcxstress(1,3)
-    Coordofmax = lowcxstress(locstress,2)*180/Pi
-
-    !max напряжения на внешней поверхности
-    *VSCFUN, locstressouter, LMAX, highcxstress(1,3)
-    Coordofmaxouter = highcxstress(locstressouter,2)*180/Pi   
-
-    !расчет толщины
-    *VSCFUN, DEPminthick, MIN, thickness(1,3)
-    *VSCFUN, locminthick, LMIN, thickness(1,3)
-    Coordofminthick = thickness(locminthick,2)
-
-    *use, ansuitmp14
-    *use, ansuitmp15
-    *use, ansuitmp12
-
 *ENDDO
-
-EPLOT   
-/REPLOT
