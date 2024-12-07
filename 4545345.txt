@@ -1,0 +1,761 @@
+CTRL ta = 10, nc = 500, dyn = 'RSM', fmax = 200, lift = 0
+
+SPEC group = 'ADE-2', int = 0, mult = 1, 1, 1, disp = 0, 0, 0
+& fx = 0.345, 0.372, 0.425, 0.51, 0.605, 0.68, 0.787, 0.85, 1.02, 1.38, 1.482, 1.53, 1.7, 1.87, 2.04, 2.606, 2.72, 3.68, 3.91, 4.075, \
+4.6, 4.668, 4.86, 5.1, 6.9, 7.475, 7.694, 8.625, 9.2, 9.416, 10.925, 11.031, 12.65, 13.714, 17.25, 19.55, 21.39, 25.3, 28.75, \
+31.05, 34.5, 46, 57.5
+& ax = 0.031, 0.029, 0.038, 0.067, 0.067, 0.135, 0.135, 0.2, 0.225, 0.225, 0.196, 0.208, 0.268, 0.275, 0.362, 0.362, 0.422, 0.422, \
+0.374, 0.314, 0.314, 0.306, 0.306, 0.373, 0.373, 0.305, 0.285, 0.285, 0.275, 0.263, 0.263, 0.258, 0.258, 0.195, 0.195, 0.186, \
+0.169, 0.169, 0.151, 0.138, 0.119, 0.107, 0.088
+& fy = 0.345, 0.372, 0.425, 0.51, 0.605, 0.68, 0.787, 0.85, 1.02, 1.38, 1.482, 1.53, 1.7, 1.87, 2.04, 2.606, 2.72, 3.68, 3.91, 4.075, \
+4.6, 4.668, 4.86, 5.1, 6.9, 7.475, 7.694, 8.625, 9.2, 9.416, 10.925, 11.031, 12.65, 13.714, 17.25, 19.55, 21.39, 25.3, 28.75, \
+31.05, 34.5, 46, 57.5
+& ay = 0.031, 0.029, 0.038, 0.067, 0.067, 0.135, 0.135, 0.2, 0.225, 0.225, 0.196, 0.208, 0.268, 0.275, 0.362, 0.362, 0.422, 0.422, \
+0.374, 0.314, 0.314, 0.306, 0.306, 0.373, 0.373, 0.305, 0.285, 0.285, 0.275, 0.263, 0.263, 0.258, 0.258, 0.195, 0.195, 0.186, \
+0.169, 0.169, 0.151, 0.138, 0.119, 0.107, 0.088
+& fz = 0.255, 0.34, 0.425, 0.51, 0.607, 0.68, 0.765, 0.85, 1.02, 1.38, 1.61, 1.674, 1.7, 1.93, 2.04, 2.21, 2.38, 3.22, 3.373, 3.4, \
+3.57, 4.83, 4.954, 5.1, 6.9, 6.956, 7.225, 7.65, 9.007, 9.35, 12.65, 12.734, 12.75, 17.25, 19.55, 23, 25.3, 28.75, 31.05, 34.5, 46, \
+57.5
+& az = 0.007, 0.008, 0.011, 0.027, 0.027, 0.046, 0.047, 0.054, 0.069, 0.069, 0.056, 0.049, 0.053, 0.053, 0.073, 0.111, 0.119, 0.119, \
+0.108, 0.111, 0.121, 0.121, 0.121, 0.142, 0.142, 0.136, 0.147, 0.199, 0.199, 0.224, 0.224, 0.219, 0.219, 0.219, 0.145, 0.106, \
+0.102, 0.088, 0.081, 0.081, 0.061, 0.053
+
+FAT 'FAT1' em = 175000, int = 11
+& nc = 10, 100000
+& sa = 319.4, 23.4
+
+FAT 'AUS' em = 173000, int = 11
+& nc = 10, 20, 50, 100, 200, 500, 800, 1000, 2000, 5000, 10000, 12000, 20000, 50000, 100000, 200000, 500000, 1E+006
+& sa = 2900, 2000, 1400, 1000, 800, 530, 450, 400, 320, 250, 200, 190, 170, 140, 115, 95, 85, 80
+
+FAT 'CS' em = 195000, int = 11
+& nc = 10, 20, 50, 100, 200, 500, 850, 1000, 2000, 5000, 10000, 12000, 20000, 50000, 100000, 200000, 500000, 1E+006
+& sa = 2100, 1700, 1100, 820, 650, 460, 380, 365, 310, 240, 190, 180, 160, 150, 120, 105, 95, 90
+
+MAT '12H18N10Tlist' fat = 'AUS', den = 7.9, mu = 0.3
+& t = -50, 20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600
+& e = 210000, 205000, 202000, 200000, 195000, 190000, 185000, 180000, 175000, 170000, 167000, 165000, 162000, 160000
+& t = -50, 20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600
+& a = 1.62E-005, 1.64E-005, 1.64E-005, 1.66E-005, 1.68E-005, 1.7E-005, 1.72E-005, 1.74E-005, 1.76E-005, 1.78E-005, 1.8E-005, \
+1.82E-005, 1.84E-005, 1.85E-005
+& t = -20, 20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600
+& su = 491, 491, 477, 456, 426, 417, 382, 358, 333, 309, 289, 260, 235, 216
+& sy = 196, 196, 193, 186, 181, 176, 167, 162, 157, 152, 144, 137, 132, 127
+
+MAT 'ST20' fat = 'CS', den = 7.85, mu = 0.3
+& t = -50, 20, 50, 100, 150, 200, 250, 300, 350
+& e = 204000, 200000, 197000, 195000, 192000, 190000, 185000, 180000, 175000
+& t = -50, 20, 50, 100, 150, 200, 250, 300, 350
+& a = 1.08E-005, 1.15E-005, 1.15E-005, 1.19E-005, 1.22E-005, 1.25E-005, 1.28E-005, 1.31E-005, 1.34E-005
+& t = -20, 20, 50, 100, 150, 200, 250, 300, 350
+& su = 402, 402, 392, 392, 392, 373, 373, 363, 353
+& sy = 216, 216, 206, 206, 206, 196, 196, 177, 157
+
+MAT '12H18N10T' fat = 'AUS', den = 7.9, mu = 0.3
+& t = -50, 20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600
+& e = 210000, 205000, 202000, 200000, 195000, 190000, 185000, 180000, 175000, 170000, 167000, 165000, 162000, 160000
+& t = -50, 20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600
+& a = 1.62E-005, 1.64E-005, 1.64E-005, 1.66E-005, 1.68E-005, 1.7E-005, 1.72E-005, 1.74E-005, 1.76E-005, 1.78E-005, 1.8E-005, \
+1.82E-005, 1.84E-005, 1.85E-005
+& t = -20, 20, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600
+& su = 510, 510, 471, 461, 441, 421, 421, 412, 412, 402, 382, 353, 333, 304
+& sy = 216, 216, 206, 206, 196, 187, 187, 177, 177, 167, 157, 147, 147, 137
+
+PIPE '1832x16' od = 1832, t = 16, w = 7.12, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.96, corr = 0.1
+PIPE '1800x6' od = 1800, t = 6, w = 2.638, c = 1.3, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.478, corr = 0.1
+PIPE '1620x10' od = 1620, t = 10, w = 3.945, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.212, corr = 0.1
+PIPE '1332x16' od = 1332, t = 16, w = 5.159, c = 1.7, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.177, corr = 0.1
+PIPE '1332x16_light' od = 1332, t = 16, w = 0, mat = '12H18N10Tlist', fw = 1, 1
+PIPE '932x16' od = 932, t = 16, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, corr = 0.1
+PIPE '932x16_light' od = 932, t = 16, w = 0, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'dnishe1' od = 237, t = 118.49, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'dnishe2' od = 629, t = 62.5, mat = '12H18N10Tlist', fw = 1, 1, corr = 0.1
+PIPE 'dnishe3' od = 931, t = 59.5, mat = '12H18N10Tlist', fw = 1, 1, corr = 0.1
+PIPE 'dnishe4' od = 1260, t = 39, mat = '12H18N10Tlist', fw = 1, 1, corr = 0.1
+PIPE 'dnishe5' od = 1544, t = 27, mat = '12H18N10Tlist', fw = 1, 1, corr = 0.1
+PIPE 'dnishe6' od = 1706, t = 21, mat = '12H18N10Tlist', fw = 1, 1, corr = 0.1
+PIPE 'dnishe7' od = 1782, t = 18, mat = '12H18N10Tlist', fw = 1, 1, corr = 0.1
+PIPE 'proushina_nzh' od = 200, t = 16, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'proushina_st20' od = 200, t = 16, mat = 'ST20', fw = 1, 1
+PIPE 'bobyshka' od = 100, t = 20, w = 0.5, mat = 'ST20', fw = 1, 1
+PIPE 'opora15' od = 975, t = 10, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'luk' od = 910, t = 6.6, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'fl_luk' od = 1075, t = 78, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'fl_komp1300_1' od = 1750, t = 225, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'fl_komp1300_2' od = 1750, t = 75, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'fl_komp1800_1' od = 2062, t = 131, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'fl_komp1800_2' od = 2190, t = 75, mat = '12H18N10Tlist', fw = 1, 1
+PIPE '2060x10' od = 2060, t = 10, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.478, corr = 0.1
+PIPE 'kolco_z1300' od = 1532, t = 116, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'kolco_z1600' od = 1620, t = 94, mat = '12H18N10Tlist', fw = 1, 1
+PIPE '219x10' od = 219, t = 10, w = 0.512, c = 2.3, mat = '12H18N10T', fw = 1, 1, fi_s = 0.6, corr = 0.1
+PIPE '18x35' od = 18, t = 3.5, w = 0.0125, c = 0.64, mat = '12H18N10T', fw = 1, 1, fi_s = 0.6, corr = 0.1
+PIPE '30x10' od = 30, t = 10, c = 2.3, mat = '12H18N10T', fw = 1, 1, corr = 0.1
+PIPE 'rebro1982' od = 1982, t = 91, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'kolco1982' od = 1982, t = 8, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'opora151' od = 975, t = 10, mat = 'ST20', fw = 1, 1
+PIPE '2200x16' od = 2200, t = 16, w = 10.82, c = 1.7, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.283, corr = 0.1
+PIPE '982x16' od = 982, t = 16, c = 1.7, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.13, corr = 0.1
+PIPE '982x16_light' od = 982, t = 16, w = 0, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'rebro2316' od = 2316, t = 74, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'kolco2316' od = 2316, t = 8, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.3
+PIPE 'Vstavka_gl' od = 2200, t = 1099, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.283
+PIPE 'F1115' od = 1115, t = 83, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.13
+PIPE 'F1040' od = 1040, t = 45, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.13
+PIPE '520x10' od = 520, t = 10, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.13
+PIPE '970x10' od = 970, t = 10, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'F1115L' od = 1115, t = 557, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'F1040L' od = 1040, t = 519, mat = '12H18N10Tlist', fw = 1, 1
+PIPE '420x10' od = 420, t = 10, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.058, corr = 0.1
+PIPE '420x10_light' od = 420, t = 10, w = 0, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'F535' od = 535, t = 67, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.06
+PIPE 'F535L' od = 535, t = 267, mat = '12H18N10Tlist', fw = 1, 1
+PIPE '2200x10' od = 2200, t = 10, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.283, corr = 0.1
+PIPE 'F2390' od = 2390, t = 111, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.3
+PIPE 'F2390D' od = 2285, t = 59, mat = '12H18N10Tlist', fw = 1, 1, iwgt = 0.3
+PIPE '2188x10' od = 2188, t = 10, w = 7.611, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.283, corr = 0.1
+PIPE '2188x4' od = 2188, t = 4, w = 4.437, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.283, corr = 0.1
+PIPE '2430x10' od = 2430, t = 10, c = 1.6, mat = '12H18N10Tlist', fw = 1, 1, fi_s = 0.6, iwgt = 0.283, corr = 0.1
+PIPE 'fl_komp2200_1' od = 2650, t = 241, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'fl_komp2200_2' od = 2650, t = 120, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'opora16' od = 1500, t = 15, w = 2.34869, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'proushina_nzh2' od = 400, t = 20, w = 0.716532, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'opora17' od = 1400, t = 14, mat = '12H18N10Tlist', fw = 1, 1
+PIPE 'opora171' od = 1400, t = 14, mat = 'ST20', fw = 1, 1
+
+OPVAL 'NE1'
+& LG 'LG_hot' p = 0.11, t = 350, csg = 0
+& LG 'LG_cold' p = 0, t = 40, csg = 0
+& LG 'LG_otkl' p = 0, t = 40, csg = 0
+OPVAL 'NE2'
+& LG 'LG_hot' p = 0.132, t = 350, csg = 0
+& LG 'LG_cold' p = 0, t = 40, csg = 0
+& LG 'LG_otkl' p = 0, t = 40, csg = 0
+OPVAL 'NE2_bez_rasp'
+& LG 'LG_hot' p = 0.132, t = 350, csg = 0
+& LG 'LG_cold' p = 0, t = 40, csg = 0
+& LG 'LG_otkl' p = 0, t = 40, csg = 0
+OPVAL 'Cold'
+& LG 'LG_hot' p = 0, t = 10, csg = 0
+& LG 'LG_cold' p = 0, t = 10, csg = 0
+& LG 'LG_otkl' p = 0, t = 10, csg = 0
+OPVAL 'NE1_bez_rasp'
+& LG 'LG_hot' p = 0.11, t = 350, csg = 0
+& LG 'LG_cold' p = 0, t = 40, csg = 0
+& LG 'LG_otkl' p = 0, t = 40, csg = 0
+OPVAL 'NNE1'
+& LG 'LG_hot' p = 0.132, t = 400, csg = 0
+& LG 'LG_cold' p = 0, t = 40, csg = 0
+& LG 'LG_otkl' p = 0, t = 40, csg = 0
+OPVAL 'PI'
+& LG 'LG_hot' p = 0.1, t = 20, csg = 0
+& LG 'LG_cold' p = 0, t = 20, csg = 0
+& LG 'LG_otkl' p = 0, t = 20, csg = 0
+
+SDEF stab = 'OST80', pvar = 0.35, pfac = 1.3, zmax = 6, zmin = 1
+
+
+10: F dc = 0, 1, 0, cs = '2200x16', lg = 'LG_otkl'
+20: P len = 32, cs = 'F2390'
+30: P len = 1, cs = 'F2390D'
+50: P len = 1
+60: P len = 32, cs = 'F2390'
+70: P len = 257, cs = '2200x16'
+80: P len = 20, cs = 'Vstavka_gl', lg = 'LG_hot'
+	80: FOR
+	& mode = 'NE2', fy = 221493
+	& mode = 'NE1', fy = 36916
+	& mode = 'NNE1', fy = 36916
+	& mode = 'PI', fy = -369155
+90: P len = 257, cs = '2200x16'
+1410: P len = 32, cs = 'F2390'
+1420: P len = 1, cs = 'F2390D'
+1440: P len = 1
+1450: P len = 32, cs = 'F2390'
+1460: P len = 217, cs = '2200x16'
+1470: P len = 280 ;направл скользящая опора
+1480: P len = 470 ;конденсатоотводчик
+100: P len = 150 ;винтовая тяга в -x -z
+1610: P len = 250 ;патрубок к теплообменнику ХС
+	1610: FOR
+	& mode = 'NE1', fx = 13274
+	& mode = 'NE2', fx = 106186
+	& mode = 'NNE1', fx = 13274
+	& mode = 'PI', fx = -132733
+	
+1620: P len = 1100
+1630: P len = 8, cs = 'rebro2316' ;ребро
+110: P len = 242, cs = '2200x16' ;скользящая опора (15) и винтовая тяга в +x -z
+1790: P len = 1249
+120: P len = 1 ;патрубок к теплообменнику ХС
+	120: FOR
+	& mode = 'NE1', fx = 13274
+	& mode = 'NE2', fx = 106186
+	& mode = 'NNE1', fx = 13274
+	& mode = 'PI', fx = -132733
+	
+1930: P len = 1
+130: P len = 1 ;  (смещены для обеспечения возможности задания тройника в узле ) 982 люк
+2400: P len = 724 ; 420 в -x (от х вниз 30 градусов) -z
+135: P len = 264
+138: P len = 8, cs = 'rebro2316'
+150: P len = 252, cs = '2200x16' ;скользящая опора (15) и  винтовая тяга в +x -z
+160: P len = 1350 ;патрубок к теплообменнику ХС
+	160: FOR
+	& mode = 'NE2', fx = 106186
+	& mode = 'NE1', fx = 13274
+	& mode = 'NNE1', fx = 13274
+	& mode = 'PI', fx = -132733
+	
+2310: P len = 250
+170: P len = 620 ;скользящая опора (15)
+180: P len = 280 ;св шов
+2430: P len = 217
+2440: P len = 32, cs = 'F2390'
+2450: P len = 1, cs = 'F2390D'
+2470: P len = 1
+2480: P len = 32, cs = 'F2390'
+2490: P len = 257, cs = '2200x16'
+2500: P len = 20
+2510: P len = 257
+2520: P len = 32, cs = 'F2390'
+2530: P len = 1, cs = 'F2390D'
+2550: P len = 1
+2560: P len = 32, cs = 'F2390'
+2570: P len = 164, cs = '2188x10'
+190: P len = 10, cs = 'fl_komp2200_1'
+	190: FOR
+	& mode = 'NE2', fy = 81825
+	& mode = 'NE1', fy = 10229
+	& mode = 'NNE1', fy = 10229
+	& mode = 'PI', fy = -102281
+200: P len = 38, cs = '2188x10'
+210: P len = 945, cs = '2188x4'
+
+190: F dc = 0, 1, 0, cs = '2430x10', lg = 'LG_hot'
+220: EJ len = 280, ka = 2, ks = 2, 2, kb = 10000, 10000, kt = 10000, pa = 0, w = 315,,, beta = 0
+230: P len = 10, cs = 'fl_komp2200_2'
+	230: FOR
+	& mode = 'NE2', fy = -12215
+	& mode = 'NE1', fy = -1527
+	& mode = 'NNE1', fy = -1527
+	& mode = 'PI', fy = 15269
+240: P len = 743, cs = '2430x10'
+	240: ANC group = 'ADE-2', note = "Герметичная перегородка ГП5"
+
+110: F dc = 1205, 0, 107, cs = 'proushina_nzh2', lg = 'LG_hot'
+250: RX len = 1100
+255: P len = 16, cs = 'proushina_nzh'
+260: P len = 93, lg = 'LG_cold'
+261: P len = 1, dc = 1424, 0, -1510 ;направление до шарнира 
+270: FJ kb = 0, 0
+271: P len = 1, cs = 'bobyshka'
+280: P len = 2075
+290: FJ kb = 0, 0
+300: P len = 132, cs = 'proushina_st20'
+	300: ANC group = 'ADE-2'
+
+110: F dc = -1205, 0, 107, cs = 'proushina_nzh2', lg = 'LG_hot'
+2630: RX len = 1100
+2640: P len = 16, cs = 'proushina_nzh'
+2650: P len = 93, lg = 'LG_cold'
+2660: P len = 1, dc = -1424, 0, -1510
+2670: FJ kb = 0, 0
+2680: P len = 1, cs = 'bobyshka'
+2690: P len = 2075
+2700: FJ kb = 0, 0
+2710: P len = 132, cs = 'proushina_st20'
+	2710: ANC group = 'ADE-2'
+
+100: F dc = -1205, 0, 107, cs = 'proushina_nzh2', lg = 'LG_hot'
+310: RX len = 1100
+315: P len = 16, cs = 'proushina_nzh'
+320: P len = 93, lg = 'LG_cold' ;106+16
+321: P len = 1, dc = -1424, 0, -1510 ;направление до шарнира 
+330: FJ kb = 0, 0
+331: P len = 1, cs = 'bobyshka'
+340: P len = 2075
+350: FJ kb = 0, 0
+360: P len = 132, cs = 'proushina_st20'
+	360: ANC group = 'ADE-2'
+
+1470: F dc = 0, 0, -1, cs = 'opora16', lg = 'LG_hot'
+1490: RX len = 1100
+1500: P len = 16, cs = 'opora15'
+1510: P len = 140, cs = 'opora151', lg = 'LG_cold'
+1520: P len = 25
+
+1530: F dc = -1, 0, 0, cs = 'opora151', lg = 'LG_cold'
+	1530: STZ- mu = 0.3, cnode = '1530_'
+	1530: STX gap = 2, mu = 0.3, cnode = '1530_'
+	1530: STZ+ mu = 0.3, cnode = '1530_'
+1520: RX len = 945
+1540: RX len = 945
+	1540: STZ- mu = 0.3, cnode = '1540_'
+	1540: STX gap = 2, mu = 0.3, cnode = '1540_'
+	1540: STZ+ mu = 0.3, cnode = '1540_'
+
+1540_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	1540_: POS 0, 0, 0, node = '1540'
+1560: RX len = 25
+1760: RX len = 180
+1570: RX len = 14
+	1570: ANC group = 'ADE-2'
+
+1530_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	1530_: POS 0, 0, 0, node = '1530'
+1590: RX len = 25
+1770: RX len = 180
+1600: RX len = 14
+	1600: ANC group = 'ADE-2'
+
+110: F dc = 0, 0, -1, cs = 'opora16', lg = 'LG_hot'
+430: RX len = 1100 ;900+16
+435: P len = 16, cs = 'opora15'
+440: P len = 140, cs = 'opora151', lg = 'LG_cold'
+1780: P len = 25
+
+450: F dc = -1, 0, 0, cs = 'opora151', lg = 'LG_cold'
+	450: STZ- mu = 0.3, cnode = '450_'
+	450: STX gap = 2, mu = 0.3, cnode = '450_'
+	450: STZ+ mu = 0.3, cnode = '450_'
+1780: RX len = 945
+460: RX len = 945
+	460: STZ- mu = 0.3, cnode = '460_'
+	460: STX gap = 2, mu = 0.3, cnode = '460_'
+	460: STZ+ mu = 0.3, cnode = '460_'
+
+460_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	460_: POS 0, 0, 0, node = '460'
+1800: RX len = 25
+1810: RX len = 180
+1820: RX len = 14
+	1820: ANC group = 'ADE-2'
+
+450_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	450_: POS 0, 0, 0, node = '450'
+1840: RX len = 25
+1850: RX len = 180
+1860: RX len = 14
+	1860: ANC group = 'ADE-2'
+
+1930: F dc = 0, 0, -1, cs = 'opora16', lg = 'LG_hot'
+1940: RX len = 1100
+1920: P len = 16, cs = 'opora17'
+1950: P len = 140, cs = 'opora171', lg = 'LG_cold'
+	1950: SUP cnode = '1950_', note = "Н.О."
+
+1950_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	1950_: POS 0, 0, 0, node = '1950'
+1960: P len = 25
+
+1970: F dc = -1, 0, 0, cs = 'opora151', lg = 'LG_cold'
+1960: RX len = 945
+1980: RX len = 945
+1990: RX len = 135, dc = 0, 1, 0
+	1990: STZ- mu = 0.3, cnode = '1990_', note = "болт"
+	1990: STZ+ mu = 0.3, cnode = '1990_'
+	1990: STX mu = 0.3, cnode = '1990_'
+	1990: STY mu = 0.3, cnode = '1990_'
+
+1990_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	1990_: POS 0, 0, 0, node = '1990'
+2000: RX len = 25
+2010: RX len = 180
+2020: RX len = 14
+2030: RX len = 135, dc = 0, -1, 0
+2040: RX len = 945, dc = 1, 0, 0 ;Н.О. пол
+
+1980: F dc = 0, -1, 0, cs = 'opora151', lg = 'LG_cold'
+2050: RX len = 135
+	2050: STZ- mu = 0.3, cnode = '2050_', note = "болт"
+	2050: STZ+ mu = 0.3, cnode = '2050_'
+	2050: STX mu = 0.3, cnode = '2050_'
+	2050: STY mu = 0.3, cnode = '2050_'
+
+2050_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	2050_: POS 0, 0, 0, node = '2050'
+2060: RX len = 25
+2070: RX len = 180
+2080: RX len = 14
+2030: RX len = 135, dc = 0, 1, 0
+
+1970: F dc = 0, 1, 0, cs = 'opora151', lg = 'LG_cold'
+2090: RX len = 135
+	2090: STZ- mu = 0.3, cnode = '2090_', note = "болт"
+	2090: STZ+ mu = 0.3, cnode = '2090_'
+	2090: STX mu = 0.3, cnode = '2090_'
+	2090: STY mu = 0.3, cnode = '2090_'
+
+2090_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	2090_: POS 0, 0, 0, node = '2090'
+2100: RX len = 25
+2110: RX len = 180
+2120: RX len = 14
+2130: RX len = 135, dc = 0, -1, 0
+2040: RX len = 945, dc = -1, 0, 0
+	2040: SUP group = 'ADE-2', note = "Н.О. пол"
+
+1970: F dc = 0, -1, 0, cs = 'opora151', lg = 'LG_cold'
+2140: RX len = 135
+	2140: STZ- mu = 0.3, cnode = '2140_', note = "болт"
+	2140: STZ+ mu = 0.3, cnode = '2140_'
+	2140: STX mu = 0.3, cnode = '2140_'
+	2140: STY mu = 0.3, cnode = '2140_'
+
+2140_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	2140_: POS 0, 0, 0, node = '2140'
+2150: RX len = 25
+2160: RX len = 180
+2170: RX len = 14
+2130: RX len = 135, dc = 0, 1, 0
+
+150: F dc = 0, 0, -1, cs = 'opora16', lg = 'LG_hot'
+2180: RX len = 1100
+2190: P len = 16, cs = 'opora15'
+2200: P len = 140, cs = 'opora151', lg = 'LG_cold'
+2210: P len = 25
+
+2220: F dc = -1, 0, 0, cs = 'opora151', lg = 'LG_cold'
+	2220: STZ- mu = 0.3, cnode = '2220_'
+	2220: STX gap = 2, mu = 0.3, cnode = '2220_'
+	2220: STZ+ mu = 0.3, cnode = '2220_'
+2210: RX len = 945
+2230: RX len = 945
+	2230: STZ- mu = 0.3, cnode = '2230_'
+	2230: STX gap = 2, mu = 0.3, cnode = '2230_'
+	2230: STZ+ mu = 0.3, cnode = '2230_'
+
+2230_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	2230_: POS 0, 0, 0, node = '2230'
+2240: RX len = 25
+2250: RX len = 180
+2260: RX len = 14
+	2260: ANC group = 'ADE-2'
+
+2220_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	2220_: POS 0, 0, 0, node = '2220'
+2270: RX len = 25
+2280: RX len = 180
+2290: RX len = 14
+	2290: ANC group = 'ADE-2'
+
+170: F dc = 0, 0, -1, cs = 'opora16', lg = 'LG_hot'
+470: RX len = 1100
+475: P len = 16, cs = 'opora15'
+2330: P len = 140, cs = 'opora151', lg = 'LG_cold'
+480: P len = 25
+
+490: F dc = -1, 0, 0, cs = 'opora151', lg = 'LG_cold'
+	490: STZ- mu = 0.3, cnode = '490_'
+	490: STX gap = 2, mu = 0.3, cnode = '490_'
+	490: STZ+ mu = 0.3, cnode = '490_'
+480: RX len = 945
+500: RX len = 945
+	500: STZ- mu = 0.3, cnode = '500_'
+	500: STX gap = 2, mu = 0.3, cnode = '500_'
+	500: STZ+ mu = 0.3, cnode = '500_'
+
+500_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	500_: POS 0, 0, 0, node = '500'
+2340: RX len = 25
+2350: RX len = 180
+2360: RX len = 14
+	2360: ANC group = 'ADE-2'
+
+490_: F dc = 0, 0, -1, cs = 'opora151', lg = 'LG_cold'
+	490_: POS 0, 0, 0, node = '490'
+2370: RX len = 25
+2380: RX len = 180
+2390: RX len = 14
+	2390: ANC group = 'ADE-2'
+
+150: F dc = 1205, 0, 107, cs = 'proushina_nzh2', lg = 'LG_hot'
+630: RX len = 1100
+632: P len = 16, cs = 'proushina_nzh'
+634: P len = 93, lg = 'LG_cold'
+640: P len = 1, dc = 1424, 0, -1510 ;направление до шарнира 
+650: FJ kb = 0, 0
+2300: P len = 1
+660: P len = 2075, cs = 'bobyshka'
+670: FJ kb = 0, 0
+680: P len = 132, cs = 'proushina_st20'
+	680: ANC group = 'ADE-2'
+
+150: F dc = -1205, 0, 107, cs = 'proushina_nzh2', lg = 'LG_hot'
+2720: RX len = 1100
+2730: P len = 16, cs = 'proushina_nzh'
+2740: P len = 93, lg = 'LG_cold'
+2750: P len = 1, dc = -1424, 0, -1510
+2760: FJ kb = 0, 0
+2770: P len = 1
+2780: P len = 2075, cs = 'bobyshka'
+2790: FJ kb = 0, 0
+2800: P len = 132, cs = 'proushina_st20'
+	2800: ANC group = 'ADE-2'
+
+2310: F dc = -1205, 0, 107, cs = 'proushina_nzh2', lg = 'LG_hot'
+690: RX len = 1100
+692: P len = 16, cs = 'proushina_nzh'
+694: P len = 93, lg = 'LG_cold'
+700: P len = 1, dc = -1424, 0, -1510 ;направление до шарнира 
+710: FJ kb = 0, 0
+2320: P len = 1
+720: P len = 2075, cs = 'bobyshka' ;Закладной элемент №2
+730: FJ kb = 0, 0
+740: P len = 132, cs = 'proushina_st20'
+	740: ANC group = 'ADE-2'
+
+1610: F dc = 1, 0, 0, cs = '1332x16', lg = 'LG_hot'
+1640: P len = 820, cs = '1332x16_light'
+1650: P len = 376, cs = '1332x16'
+1660: P len = 10, cs = 'fl_komp1300_1'
+	1660: FOR
+	& mode = 'NE1', fx = 6087
+	& mode = 'NE2', fx = 48689
+	& mode = 'NNE1', fx = 6087
+	& mode = 'PI', fx = -60861
+1670: P len = 199, cs = '1332x16'
+1680: P len = 4, cs = 'kolco_z1300'
+1690: P len = 57, cs = '1332x16'
+
+1660: F dc = 1, 0, 0, cs = '1332x16', lg = 'LG_hot'
+1700: EJ len = 220, ka = 2, ks = 2, 2, kb = 10000, 10000, kt = 10000, pa = 0, w = 458,,, beta = 0
+1710: P len = 10, cs = 'fl_komp1300_2'
+	1710: FOR
+	& mode = 'NE1', fx = -3411
+	& mode = 'NE2', fx = -27287
+	& mode = 'NNE1', fx = -3411
+	& mode = 'PI', fx = 34108
+1720: P len = 13, cs = '1620x10'
+1730: P len = 4, cs = 'kolco_z1600'
+1740: P len = 127, cs = '1620x10'
+1750: P len = 1
+	1750: ANC group = 'ADE-2', note = "Теплообменник ХС"
+	& mode = 'NE1', dx = -8, dz = 12.8
+	& mode = 'NE1_bez_rasp', dx = -8, dz = 12.8
+	& mode = 'NE2', dx = -8, dz = 12.8
+	& mode = 'NE2_bez_rasp', dx = -8, dz = 12.8
+	& mode = 'NNE1', dx = -8, dz = 12.8
+	1750: FOR
+	& mode = 'NE1', fx = -15949
+	& mode = 'NE2', fx = -127588
+	& mode = 'NNE1', fx = -15949
+	& mode = 'PI', fx = 159485
+
+120: F dc = 1, 0, 0, cs = '1332x16', lg = 'LG_hot'
+750: P len = 820, cs = '1332x16_light'
+760: P len = 376, cs = '1332x16'
+770: P len = 10, cs = 'fl_komp1300_1'
+	770: FOR
+	& mode = 'NE1', fx = 6087
+	& mode = 'NE2', fx = 48689
+	& mode = 'NNE1', fx = 6087
+	& mode = 'PI', fx = -60861
+772: P len = 199, cs = '1332x16'
+774: P len = 4, cs = 'kolco_z1300'
+780: P len = 57, cs = '1332x16'
+
+770: F dc = 1, 0, 0, cs = '1332x16', lg = 'LG_hot'
+790: EJ len = 220, ka = 2, ks = 2, 2, kb = 10000, 10000, kt = 10000, pa = 0, w = 458,,, beta = 0
+800: P len = 10, cs = 'fl_komp1300_2'
+	800: FOR
+	& mode = 'NE1', fx = -3411
+	& mode = 'NE2', fx = -27287
+	& mode = 'NNE1', fx = -3411
+	& mode = 'PI', fx = 34108
+802: P len = 13, cs = '1620x10'
+804: P len = 4, cs = 'kolco_z1600'
+805: P len = 127, cs = '1620x10'
+810: P len = 1
+	810: ANC group = 'ADE-2', note = "Теплообменник ХС6"
+	& mode = 'NE2', dx = -8, dz = 12.8
+	& mode = 'NE1', dx = -8, dz = 12.8
+	& mode = 'NE2_bez_rasp', dx = -8, dz = 12.8
+	& mode = 'NE1_bez_rasp', dx = -8, dz = 12.8
+	& mode = 'NNE1', dx = -8, dz = 12.8
+	810: FOR
+	& mode = 'NE1', fx = -15949
+	& mode = 'NE2', fx = -127588
+	& mode = 'NNE1', fx = -15949
+	& mode = 'PI', fx = 159485
+
+160: F dc = 1, 0, 0, cs = '1332x16', lg = 'LG_hot'
+820: P len = 820, cs = '1332x16_light'
+830: P len = 376, cs = '1332x16'
+840: P len = 10, cs = 'fl_komp1300_1'
+	840: FOR
+	& mode = 'NE2', fx = 48689
+	& mode = 'NE1', fx = 6087
+	& mode = 'NNE1', fx = 6087
+	& mode = 'PI', fx = -60861
+842: P len = 199, cs = '1332x16'
+844: P len = 4, cs = 'kolco_z1300'
+850: P len = 57, cs = '1332x16'
+
+840: F dc = 1, 0, 0, cs = '1332x16', lg = 'LG_hot'
+860: EJ len = 220, ka = 2, ks = 2, 2, kb = 10000, 10000, kt = 10000, pa = 0, w = 458,,, beta = 0
+870: P len = 10, cs = 'fl_komp1300_2'
+	870: FOR
+	& mode = 'NE1', fx = -3411
+	& mode = 'NE2', fx = -27287
+	& mode = 'NNE1', fx = -3411
+	& mode = 'PI', fx = 34108
+872: P len = 13, cs = '1620x10'
+874: P len = 4, cs = 'kolco_z1600'
+875: P len = 127, cs = '1620x10'
+880: P len = 1
+	880: ANC group = 'ADE-2', note = "Теплообменник ХС5"
+	& mode = 'NE2', dx = -8, dz = 12.8
+	& mode = 'Cold'
+	& mode = 'NE1', dx = -8, dz = 12.8
+	& mode = 'NE2_bez_rasp', dx = -8, dz = 12.8
+	& mode = 'NE1_bez_rasp', dx = -8, dz = 12.8
+	& mode = 'NNE1', dx = -8, dz = 12.8
+	880: FOR
+	& mode = 'NE1', fx = -15949
+	& mode = 'NE2', fx = -127588
+	& mode = 'NNE1', fx = -15949
+	& mode = 'PI', fx = 159485
+
+130: F dc = -1, 0, 0, cs = '982x16', lg = 'LG_hot' ;люк
+890: P len = 900, cs = '982x16_light'
+900: P len = 300, cs = '982x16'
+910: P len = 22, cs = 'F1115'
+920: P len = 7, cs = 'F1040'
+1890: P len = 7, cs = 'F1040L'
+1900: P len = 20, cs = 'F1115L'
+1910: P len = 70, cs = '520x10'
+
+1480: F dc = 0, 0, -1, cs = '219x10', lg = 'LG_hot'
+1210: P len = 1100
+1220: P len = 59
+	
+1230: P len = 20
+
+1220: F dc = 0.1098, 0.052, 0, cs = '30x10', lg = 'LG_hot'
+1240: P len = 110
+1250: P len = 105
+1260: P len = 50, cs = '18x35', lg = 'LG_cold'
+1270: P len = 300
+1280: P len = 300
+1290: P len = 300
+1300: V len = 50, w = 3,,
+
+1620: F dc = 0, -1, 0, cs = 'kolco2316', lg = 'LG_hot'
+1350: P len = 21
+
+1630: F dc = 0, 1, 0, cs = 'kolco2316', lg = 'LG_hot'
+1360: P len = 21
+
+135: F dc = 0, -1, 0, cs = 'kolco2316', lg = 'LG_hot'
+1370: P len = 21
+
+138: F dc = 0, 1, 0, cs = 'kolco2316', lg = 'LG_hot'
+1380: P len = 21
+
+2400: F ds = 180, -29.7449, 1, cs = '420x10_light', lg = 'LG_hot'
+1830: P len = 1000
+1870: P len = 100, cs = '420x10'
+1880: P len = 182
+2410: P len = 35, cs = 'F535'
+2420: P len = 26, cs = 'F535L'
+
+10: F dc = 0, -1, 0, cs = '2188x10', lg = 'LG_otkl'
+2460: P len = 164
+2540: P len = 10, cs = 'fl_komp2200_1'
+	2540: FOR
+	& mode = 'NE2', fy = -20457
+2580: P len = 38, cs = '2188x10'
+2590: P len = 945, cs = '2188x4'
+
+2540: F dc = 0, -1, 0, cs = '2430x10', lg = 'LG_otkl'
+2600: EJ len = 280, ka = 2, ks = 2, 2, kb = 10000,, kt = 10000, pa = 0, w = 315,,, beta = 0
+2610: P len = 10, cs = 'fl_komp2200_2'
+	2610: FOR
+	& mode = 'NE2', fy = 3054
+2620: P len = 743, cs = '2430x10'
+	2620: ANC group = 'ADE-2', note = "Герметичная перегородка ГП6"
+
+SOLV "Поверочный расчет с заданными характеристиками упругих опор (#2) + сейсмика"
+& LC mod = 'NE1', type = 'OPER_A', pend = 'YES', load = 'F', note = "Этап II (НЭ1)" ; LC01
+& LC mod = 'NE1', type = 'SUST_C', load = 'F', note = "Этап I (НЭ1)" ; LC02
+& LC mod = 'Cold', type = 'OPER_B', pend = 'YES', note = "Этап IV" ; LC03
+& LC mod = 'NE2', type = 'MODAL', pend = 'YES', note = "Модальный анализ (для NE2)" ; LC04
+& LC mod = 'NE2', type = 'OPER_A', pend = 'YES', load = 'F', note = "Этап II (НЭ2)" ; LC05
+& LC mod = 'NE2', type = 'SUST_C', load = 'F', note = "Этап I (НЭ2)" ; LC06
+& LC mod = 'NE1_bez_rasp', type = 'OPER_A', pend = 'YES', note = "Этап II (НЭ1_bez_rasp)" ; LC07
+& LC mod = 'NE1_bez_rasp', type = 'SUST_C', note = "Этап I (НЭ1_bez_rasp)" ; LC08
+& LC mod = 'NE2_bez_rasp', type = 'OPER_A', pend = 'YES', note = "Этап II (НЭ2_bez_rasp)" ; LC09
+& LC mod = 'NE2_bez_rasp', type = 'SUST_C', note = "Этап I (НЭ2_bez_rasp)" ; LC10
+& LC mod = 'NNE1', type = 'OPER_A', pend = 'YES', load = 'F', note = "Этап II (ННЭ1)" ; LC11
+& LC mod = 'NNE1', type = 'SUST_C', load = 'F', note = "Этап I (ННЭ1)" ; LC12
+& LC mod = 'PI', type = 'OPER_A', pend = 'YES', load = 'F', note = "Этап II (PI)" ; LC13
+& LC mod = 'PI', type = 'SUST_C', load = 'F', note = "Этап I (PI)" ; LC14
+
+POST
+& res = 'S2_NUE', ls = "LC02", note = "Напряжения S2 (NE1)" ; LS1
+& res = 'SRK', ls = "LC01-LC03", note = "Напряжения Srk (NE1)" ; LS2
+& res = 'SAF', ls = "LC01-LC03", note = "Напряжения Saf (NE1)" ; LS3
+& res = 'S2_NUE', ls = "LC06", note = "Напряжения S2 (NE2)" ; LS4
+& res = 'SRK', ls = "LC05-LC03", note = "Напряжения Srk (NE2)" ; LS5
+& res = 'SAF', ls = "LC05-LC03", note = "Напряжения Saf (NE2)" ; LS6
+& res = 'DISP', ls = "LC02", note = "Весовые перемещения (NE1)" ; LS7
+& res = 'DISP', ls = "LC01", note = "Перемещения 2 этап (NE1)" ; LS8
+& res = 'DISP', ls = "LC03", note = "Перемещения 4 этап" ; LS9
+& res = 'DISP', ls = "LC01-LC03", note = "Видимые перемещения (NE1)" ; LS10
+& res = 'DISP', ls = "LC06", note = "Весовые перемещения (NE2)" ; LS11
+& res = 'DISP', ls = "LC05", note = "Перемещения 2 этап (NE2)" ; LS12
+& res = 'DISP', ls = "LC05-LC03", note = "Видимые перемещения (NE2)" ; LS13
+& res = 'DISP', ls = "LC09", note = "Перемещения 2 этап (bez_rasp)" ; LS14
+& res = 'SUPP', ls = "LC01", out = 'No', note = "Нагрузки NE1" ; LS15
+& res = 'SUPP', ls = "LC07", out = 'No', note = "Нагрузки NE1_bez_rasp" ; LS16
+& res = 'SUPP', ls = "LC05", out = 'No', note = "Нагрузки NE2" ; LS17
+& res = 'SUPP', ls = "LC09", out = 'No', note = "Нагрузки NE2_bez_rasp" ; LS18
+& res = 'SUPP', ls = "LC03", note = "Нагрузки в хол. состоянии" ; LS19
+& res = 'FORC', ls = "LC02", out = 'No', note = "Усилия 1 этап (NE1)" ; LS20
+& res = 'FORC', ls = "LC01", out = 'No', note = "Усилия 2 этап (NE1)" ; LS21
+& res = 'FORC', ls = "LC01-LC03", out = 'No', note = "Усилия 3 этап (NE1)" ; LS22
+& res = 'FORC', ls = "LC03", out = 'No', note = "Усилия 4 этап" ; LS23
+& res = 'FORC', ls = "LC06", out = 'No', note = "Усилия 1 этап (NE2)" ; LS24
+& res = 'FORC', ls = "LC05", out = 'No', note = "Усилия 2 этап (NE2)" ; LS25
+& res = 'FORC', ls = "LC05-LC03", out = 'No', note = "Усилия 3 этап (NE2)" ; LS26
+& res = 'S2_NUE', ls = "LC12", note = "Напряжения S2 (NNE1)" ; LS27
+& res = 'SRK', ls = "LC11-LC03", note = "Напряжения Srk (NNE1)" ; LS28
+& res = 'SAF', ls = "LC11-LC03", note = "Напряжения Saf (NNE1)" ; LS29
+& res = 'S2_HDR', ls = "LC14", note = "Напряжения S2 (PI)" ; LS30
+& res = 'SRK', ls = "LC13-LC03", note = "Напряжения Srk (PI)" ; LS31
+& res = 'SAF', ls = "LC13-LC03", note = "Напряжения Saf (PI)" ; LS32
+& res = 'DISP', ls = "LC12", note = "Весовые перемещения (NNE1)" ; LS33
+& res = 'DISP', ls = "LC11-LC03", note = "Видимые перемещения (NNE1)" ; LS34
+& res = 'DISP', ls = "LC11", note = "Перемещения 2 этап (NNE1)" ; LS35
+& res = 'DISP', ls = "LC14", note = "Весовые перемещения (PI)" ; LS36
+& res = 'DISP', ls = "LC13-LC03", note = "Видимые перемещения (PI)" ; LS37
+& res = 'DISP', ls = "LC13", note = "Перемещения 2 этап (PI)" ; LS38
+& res = 'SUPP', ls = "LC11", out = 'No', note = "Нагрузки NNE1" ; LS39
+& res = 'SUPP', ls = "LC13", out = 'No', note = "Нагрузки PI" ; LS40
+& res = 'SUPP', ls = "LC02", note = "Нагрузки 1 эт (NE1)" ; LS41
+& res = 'SUPP', ls = "LC06", note = "Нагрузки 1 эт (NE2)" ; LS42
+& res = 'SUPP', ls = "LC12", note = "Нагрузки 1 эт (NNE1)" ; LS43
+& res = 'SUPP', ls = "LC14", note = "Нагрузки 1 эт (PI)" ; LS44
+& res = 'FORC', ls = "LC12", out = 'No', note = "Усилия 1 эт (NNE1)" ; LS45
+& res = 'FORC', ls = "LC11", out = 'No', note = "Усилия 2 эт (NNE1)" ; LS46
+& res = 'FORC', ls = "LC11-LC03", out = 'No', note = "Усилия 3 эт (NNE1)" ; LS47
+& res = 'FORC', ls = "LC14", out = 'No', note = "Усилия 1 эт (PI)" ; LS48
+& res = 'FORC', ls = "LC13", out = 'No', note = "Усилия 2 эт (PI)" ; LS49
+& res = 'FORC', ls = "LC13-LC03", out = 'No', note = "Усилия 3 эт (PI)" ; LS50
+& res = 'SUPP', ls = "LC01", note = "Нагрузки NE1-II" ; LS51
+& res = 'SUPP', ls = "LC05", note = "Нагрузки NE2-II" ; LS52
+& res = 'SUPP', ls = "LC11", note = "Нагрузки NNE1-II" ; LS53
+& res = 'SUPP', ls = "LC13", note = "Нагрузки PI-II" ; LS54
+& res = 'FORC', ls = "LC02", note = "Усилия НЭ1-I" ; LS55
+& res = 'FORC', ls = "LC06", note = "Усилия НЭ2-I" ; LS56
+& res = 'FORC', ls = "LC12", note = "Усилия ННЭ1-I" ; LS57
+& res = 'FORC', ls = "LC14", note = "Усилия ПИ-I" ; LS58
+& res = 'FORC', ls = "LC01-LC03", note = "Усилия НЭ1-III" ; LS59
+& res = 'FORC', ls = "LC05-LC03", note = "Усилия НЭ2-III" ; LS60
+& res = 'FORC', ls = "LC11-LC03", note = "Усилия ННЭ1-III" ; LS61
+& res = 'FORC', ls = "LC13-LC03", note = "Усилия ПИ-III" ; LS62
+& res = 'SUPP', ls = "LC03", note = "ХС" ; LS63
+
+POST_REP load_hot = 'LC01', load_cold = 'LC03', load_des = 'LC01'

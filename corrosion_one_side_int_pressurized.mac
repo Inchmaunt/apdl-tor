@@ -57,8 +57,8 @@ k=1/2
 ai=0.05
 mi=ai/(k*smax)
 
-ao=0.05
-mo=ao/(k*smax)
+ao=0
+mo=0
 
 timesize=0.01 !шаг по времени в задаче
 
@@ -182,7 +182,7 @@ SOLVE
 *END
 
 !================================цикл===============================================
-*DO, iniload, 0.25,0.25, 0.25
+*DO, iniload, 0.25,0.75, 0.25
 
     pr=(h*smax*iniload)/R2 !давление
 
@@ -191,8 +191,8 @@ SOLVE
         ai=0.05
         mi=ai/(k*smax)
 
-        ao=0.05
-        mo=ao/(k*smax)
+        ao=0
+        mo=0
         !==================================================перечитать задачу==============================
         /PREP7
         LSCLEAR,ALL 
@@ -302,6 +302,7 @@ SOLVE
             !     *ENDDO
 
             *DO, i, 0, elemcount,1
+
                 *GET, lowcxstress(i+1,1,1), NODE, i+1, S,Y
                 lowcxstress(i+1,2,1) = Pi/elemcount*i
                 
@@ -310,6 +311,7 @@ SOLVE
                     *ELSE
                     lowcxstress(i+1,3,1)=lowcxstress(i+1,1,1)
                 *ENDIF
+
             *ENDDO
             
             !================================первое напряжение============================
@@ -323,6 +325,7 @@ SOLVE
                 *ELSE
 
                 *DO, i, 0, elemcount,1
+
                     *GET, highcxstress(i+1,1,1), NODE, elemcount+i+1+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
                     highcxstress(i+1,2,1) = Pi/elemcount*i
 
@@ -331,6 +334,7 @@ SOLVE
                         *ELSE
                         highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
                     *ENDIF
+                    
                 *ENDDO
 
                 !вычисляем новую геометрию по коррозии
@@ -372,7 +376,7 @@ SOLVE
                 *ENDDO
 
                 *DO, i, 0, elemcount,1
-                    K,i+tn+1,highcxcorrosion(i+1,2,1),highcxcorrosion(i+1,3,1),0,
+                    K,i+tn+1,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
                 *ENDDO
 
                 *DO, i, 1, elemcount,1
