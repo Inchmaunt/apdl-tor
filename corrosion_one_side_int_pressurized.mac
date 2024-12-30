@@ -35,7 +35,7 @@ h=R2/20 !толщина
 
 r1=R2-h !внутренний радиус сечерия тора
 
-b=10*R2 !радиус окружности тора
+b=20*R2 !радиус окружности тора
 
 smax=450 !SMAX для случая с b=2 R1 равно 350, для случая с b-20 R1 равно 408
 iniload=0.25 !коэффициент начального нагружения (в долях процента, для процента надо домножить на 100)
@@ -60,7 +60,7 @@ mi=ai/(k*smax)
 ao=0
 mo=0
 
-timesize=0.01 !шаг по времени в задаче
+timesize=0.05 !шаг по времени в задаче
 
 linesize=1    !число разбиений на плоскостях симметрии
 meshsize=1    !размер элементов сетки
@@ -99,7 +99,7 @@ meshsize=1    !размер элементов сетки
     highcXcyl(i+1,1,1) = Pi/elemcount*i
     highcXcyl(i+1,2,1) = b+R2*COS(Pi/elemcount*i)
     highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
-K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+    K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
 *ENDDO 
 
 *DO, i, 0, elemcount, 1
@@ -111,6 +111,7 @@ K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
 *DO, i, 1, elemcount,1
     LSTR, i+tn, i+1+tn
 *ENDDO 
+
 LSTR, 1, 1+tn
 LSTR, elemcount+1, elemcount+1+tn
 LESIZE,ALL, , ,1, , , , ,1 
@@ -176,17 +177,17 @@ SOLVE
 
 *CREATE,ansuitmp15
 *CFOPEN, 'D:\doubleside', txt,,append
-*VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,k,halfof,iniload,mi, , , ,, , , ,
-(10f10.4)
+*VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,k,halfof,iniload,, , , ,, , , ,
+(9f10.4)
 *CFCLOS
 *END
 
 !================================цикл===============================================
-*DO, iniload, 0.25,0.75, 0.25
+*DO, iniload, 0.75,0.75, 0.25
 
     pr=(h*smax*iniload)/R2 !давление
 
-    *DO, k, 1, 8, 3
+    *DO, k, 0.5, 0.5, 1
 
         ai=0.05
         mi=ai/(k*smax)
@@ -218,7 +219,7 @@ SOLVE
             highcXcyl(i+1,1,1) = Pi/elemcount*i
             highcXcyl(i+1,2,1) = b+R2*COS(Pi/elemcount*i)
             highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
-        K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+            K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
         *ENDDO 
 
         *DO, i, 0, elemcount, 1
@@ -271,7 +272,7 @@ SOLVE
 
 
         !==================================================заходим во временной цикл==============================
-        *DO, t1, 0, 30, timesize
+        *DO, t1, 0, 50, timesize
 
             !определяем напряжения в узлах на поверхности
             !t1=0.07
@@ -322,7 +323,7 @@ SOLVE
 
                 *VSCFUN, initialstress, MAX, lowcxstress(1,1)
 
-                *ELSE
+            *ELSE
 
                 *DO, i, 0, elemcount,1
 
