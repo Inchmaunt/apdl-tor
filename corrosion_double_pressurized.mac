@@ -42,6 +42,7 @@ iniload=0.25 !коэффициент начального нагружения (
 
 
 pr=(h*smax*iniload)/R2 !давление
+!pr=1
 po=1e-6
 
 elemcount=180 !число разбиений сетки
@@ -55,12 +56,12 @@ k=1/2
 
 
 ai=0.05
-mi=0
-!mi=ai/(k*smax)
+!mi=0
+mi=ai/(k*smax)
 
 ao=0.05
-mo=0
-!mo=ao/(k*smax)
+!mo=0
+mo=ao/(k*smax)
 
 timesize=0.05 !шаг по времени в задаче
 
@@ -135,8 +136,8 @@ LSCLEAR,ALL
     SFL,i,PRES,po,
 *ENDDO
 
-DL,elemcount*2+1,1, UY, ,  
-DL,elemcount*2+2,1, UY, ,  
+DL,elemcount*2+1,1, SYMM, ,  
+DL,elemcount*2+2,1, SYMM, ,  
 
 
 CSYS,0 
@@ -147,7 +148,7 @@ FINISH
 !/STATUS,SOLU
 SOLVE
 /Post1
-!RSYS,112
+RSYS,112
 
 !===============================================файлы====================================
 
@@ -188,15 +189,15 @@ SOLVE
 
     pr=(h*smax*iniload)/R2 !давление
 
-    *DO, k, 1, 4, 3
+    *DO, k, 0.5, 1, 0.5
 
         ai=0.05
-        mi=0
-        !mi=ai/(k*smax)
+        !mi=0
+        mi=ai/(k*smax)
 
         ao=0.05
-        mo=0
-        !mo=ao/(k*smax)
+        !mo=0
+        mo=ao/(k*smax)
         !==================================================перечитать задачу==============================
         /PREP7
         LSCLEAR,ALL 
@@ -257,8 +258,8 @@ SOLVE
             SFL,i,PRES,po,
         *ENDDO
 
-        DL,elemcount*2+1,1, UY, ,  
-        DL,elemcount*2+2,1, UY, ,  
+        DL,elemcount*2+1,1, SYMM, ,  
+        DL,elemcount*2+2,1, SYMM, ,  
 
 
         CSYS,0 
@@ -411,8 +412,8 @@ SOLVE
                     SFL,i,PRES,po,
                 *ENDDO
 
-                DL,elemcount*2+1,1, UY, ,  
-                DL,elemcount*2+2,1, UY, ,  
+                DL,elemcount*2+1,1, SYMM, ,  
+                DL,elemcount*2+2,1, SYMM, ,  
 
 
                 CSYS,0 

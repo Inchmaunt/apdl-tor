@@ -31,7 +31,7 @@ CSYS,0
 
 R2=50 !наружный радиус сечерия тора
 
-h=R2/10 !толщина
+h=R2/5 !толщина
 
 r1=R2-h !внутренний радиус сечерия тора
 
@@ -55,12 +55,12 @@ k=1
 
 
 ai=0.05
-mi=0
-!mi=ai/(k*smax)
+!mi=0
+mi=ai/(k*smax)
 
 ao=0.05
-mo=0
-!mo=ao/(k*smax)
+!mo=0
+mo=ao/(k*smax)
 
 timesize=0.05 !шаг по времени в задаче
 
@@ -135,8 +135,8 @@ LSCLEAR,ALL
     SFL,i,PRES,po,
 *ENDDO
 
-DL,elemcount*2+1,1, UY, ,  
-DL,elemcount*2+2,1, UY, ,  
+DL,elemcount*2+1,1, SYMM, ,  
+DL,elemcount*2+2,1, SYMM, ,  
 
 
 CSYS,0 
@@ -171,8 +171,8 @@ SOLVE
 
 *CREATE,ansuitmp14
 *CFOPEN, 'D:\thickdepStress', txt,,append
-*VWRITE,t1,DEPmaxstress,Coordofmax,DEPminthick,Coordofminthick , ,, ,,, , , , ,, , , ,
-(5f10.4)
+*VWRITE,t1,DEPmaxstress,Coordofmax,DEPminthick,Coordofminthick , DEPmaxthick,, ,,, , , , ,, , , ,
+(6f10.4)
 *CFCLOS
 *END
 
@@ -188,15 +188,15 @@ SOLVE
 
     pr=(h*smax*iniload)/R2 !давление
 
-    *DO, k, 1, 4, 3
+    *DO, k, 7, 7, 1
 
         ai=0.05
-        mi=0
-        !mi=ai/(k*smax)
+        !mi=0
+        mi=ai/(k*smax)
 
         ao=0.05
-        mo=0
-        !mo=ao/(k*smax)
+        !mo=0
+        mo=ao/(k*smax)
         !==================================================перечитать задачу==============================
         /PREP7
         LSCLEAR,ALL 
@@ -257,8 +257,8 @@ SOLVE
             SFL,i,PRES,po,
         *ENDDO
 
-        DL,elemcount*2+1,1, UY, ,  
-        DL,elemcount*2+2,1, UY, ,  
+        DL,elemcount*2+1,1, SYMM, ,  
+        DL,elemcount*2+2,1, SYMM, ,  
 
 
         CSYS,0 
@@ -476,8 +476,8 @@ SOLVE
                     SFL,i,PRES,po,
                 *ENDDO
 
-                DL,elemcount*2+1,1, UY, ,  
-                DL,elemcount*2+2,1, UY, ,  
+                DL,elemcount*2+1,1, SYMM, ,  
+                DL,elemcount*2+2,1, SYMM, ,  
 
 
                 CSYS,0 
@@ -507,8 +507,8 @@ SOLVE
                 *VSCFUN, DEPminthick, MIN, thickness(1,3)
                 *VSCFUN, locminthick, LMIN, thickness(1,3)
                 Coordofminthick = thickness(locminthick,2)
-
-                halfof=(DEPmaxstress/smax*100-initialstress/smax*100)/(100-initialstress/smax*100)
+                *VSCFUN, DEPmaxthick, MAX, thickness(1,3)
+                halfof=(DEPmaxstress-initialstress)/(smax-initialstress)
 
                 *use, ansuitmp14
                 *use, ansuitmp15
@@ -516,7 +516,8 @@ SOLVE
                 
                
                 *ENDIF
-            *IF, DEPminthick,LT,h2,OR,DEPmaxstress,GT,smax,EXIT
+            !*IF, DEPminthick,LT,h2,OR,DEPmaxstress,GT,smax,EXIT
+            *IF, DEPmaxstress,GT,smax,EXIT
             *ENDIF
 
 
