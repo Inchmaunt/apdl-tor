@@ -31,25 +31,21 @@ CSYS,0
 
 R2=50 !наружный радиус сечерия тора
 
-!h=R2/20 !толщина
-h=R2/5
+h=R2/20 !толщина
 
 r1=R2-h !внутренний радиус сечерия тора
 
-rc1=(R2+r1)/2
-
-b=20*R2 !радиус окружности тора
+b=10*R2 !радиус окружности тора
 
 smax=450 !SMAX для случая с b=2 R1 равно 350, для случая с b-20 R1 равно 408
 iniload=0.25 !коэффициент начального нагружения (в долях процента, для процента надо домножить на 100)
 
 
-!pr=2(h*smax*iniload)/R2 !давление
-pr=(2*h*smax*iniload)/rc1*(b-rc1)/(2*b-rc1) !давление
+pr=(h*smax*iniload)/R2 !давление
 !pr=1
 po=1e-6
 
-elemcount=180 !число разбиений сетки
+elemcount=36 !число разбиений сетки
 
 Pi=ACOS(-1)  !число пи
 
@@ -69,7 +65,7 @@ mo=ao/(k*smax)
 
 timesize=0.05 !шаг по времени в задаче
 
-linesize=6    !число разбиений на плоскостях симметрии
+linesize=1    !число разбиений на плоскостях симметрии
 meshsize=1    !размер элементов сетки
 
 !==================дано==================
@@ -85,7 +81,7 @@ meshsize=1    !размер элементов сетки
 *DIM, lowcxcorrosion, array, elemcount+1, 3
 *DIM, highcxcorrosion, array, elemcount+1, 3
 *DIM, thickness, array, elemcount+1, 3
-
+*DIM,points, array, elemcount+1,2
 
 !==================массивы для задачи==================
 
@@ -97,9 +93,9 @@ meshsize=1    !размер элементов сетки
     K,i+1, lowcXcyl(i+1,2,1), lowcXcyl(i+1,3,1), 0,
 *ENDDO 
 
-*DO, i, 1, elemcount,1
-    LSTR, i, i+1
-*ENDDO 
+!*DO, i, 1, elemcount,1
+!    LSTR, i, i+1
+!*ENDDO 
 
 
 *DO, i, 0, elemcount,1
@@ -114,10 +110,27 @@ K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
     thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
     thickness(i+1,3,1) = ((highcXcyl(i+1,2,1)-lowcXcyl(i+1,2,1))**2 + (highcXcyl(i+1,3,1)-lowcXcyl(i+1,3,1))**2)**0.5
 *ENDDO
-    
-*DO, i, 1, elemcount,1
-    LSTR, i+tn, i+1+tn
-*ENDDO 
+
+
+*DO, i, 1, elemcount+1,1
+points(i,1,1)=i
+*ENDDO
+*DO, i, 1, elemcount+1,1
+points(i,2,1)=i+tn
+*ENDDO
+
+*DO,i,1,elemcount+1
+BSPLIN,
+*ENDDO
+
+*DO,i,tn+1,tn+elemcount+1
+BSPLIN, All
+*ENDDO
+!*DO, i, 1, elemcount,1
+!    LSTR, i+tn, i+1+tn
+!*ENDDO 
+
+
 LSTR, 1, 1+tn
 LSTR, elemcount+1, elemcount+1+tn
 LESIZE,ALL, , ,1, , , , ,1 
@@ -189,11 +202,11 @@ RSYS,112
 *END
 
 !================================цикл===============================================
-*DO, iniload, 0.25,0.25, 0.25
+*DO, iniload, 0.25,0.75, 0.25
 
-    pr=(2*h*smax*iniload)/rc1*(b-rc1)/(2*b-rc1) !давление
+    pr=(h*smax*iniload)/R2 !давление
 
-    *DO, k, 7, 7, 3
+    *DO, k, 0.5, 1, 0.5
 
         ai=0.05
         !mi=0
@@ -218,9 +231,10 @@ RSYS,112
             K,i+1, lowcXcyl(i+1,2,1), lowcXcyl(i+1,3,1), 0,
         *ENDDO 
 
-        *DO, i, 1, elemcount,1
-            LSTR, i, i+1
-        *ENDDO 
+        BSPLIN, All
+        !*DO, i, 1, elemcount,1
+        !    LSTR, i, i+1
+        !*ENDDO 
 
 
         *DO, i, 0, elemcount,1
@@ -236,9 +250,10 @@ RSYS,112
             thickness(i+1,3,1) = ((highcXcyl(i+1,2,1)-lowcXcyl(i+1,2,1))**2 + (highcXcyl(i+1,3,1)-lowcXcyl(i+1,3,1))**2)**0.5
         *ENDDO
 
-        *DO, i, 1, elemcount,1
-            LSTR, i+tn, i+1+tn
-        *ENDDO 
+        BSPLIN, All
+        !*DO, i, 1, elemcount,1
+        !    LSTR, i+tn, i+1+tn
+        !*ENDDO 
 
         LSTR, 1, 1+tn
         LSTR, elemcount+1, elemcount+1+tn
@@ -280,7 +295,7 @@ RSYS,112
 
 
         !==================================================заходим во временной цикл==============================
-        *DO, t1, 0, 150, timesize
+        *DO, t1, 0, 30, timesize
 
             !определяем напряжения в узлах на поверхности
             !t1=0.07
@@ -376,17 +391,19 @@ RSYS,112
                     K,i+1,lowcxcorrosion(i+1,2,1),lowcxcorrosion(i+1,3,1),0,
                 *ENDDO
 
-                *DO, i, 1, elemcount,1
-                    LSTR, i, i+1
-                *ENDDO
+                BSPLIN, All
+                !*DO, i, 1, elemcount,1
+                !    LSTR, i, i+1
+                !*ENDDO
 
                 *DO, i, 0, elemcount,1
                     K,i+tn+1,highcxcorrosion(i+1,2,1),highcxcorrosion(i+1,3,1),0,
                 *ENDDO
 
-                *DO, i, 1, elemcount,1
-                    LSTR, i+tn, i+1+tn
-                *ENDDO
+                BSPLIN, All
+                !*DO, i, 1, elemcount,1
+                !    LSTR, i+tn, i+1+tn
+                !*ENDDO
 
                 *DO, i, 1, elemcount,1
                     LSTR, i+tn, i+1+tn

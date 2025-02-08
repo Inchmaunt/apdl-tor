@@ -31,12 +31,11 @@ CSYS,0
 
 R2=50 !наружный радиус сечерия тора
 
-!h=R2/20 !толщина
-h=R2/5
+h=R2/10 !толщина
 
 r1=R2-h !внутренний радиус сечерия тора
 
-rc1=(R2+r1)/2
+rc1=(R2+r1)/2 !срединный радиус
 
 b=20*R2 !радиус окружности тора
 
@@ -55,21 +54,21 @@ Pi=ACOS(-1)  !число пи
 
 tn = 1000 !техническое число
 
-k=1/2
+k=100
 
 
 
 ai=0.05
-!mi=0
-mi=ai/(k*smax)
+mi=0
+!mi=ai/(k*smax)
 
 ao=0.05
-!mo=0
-mo=ao/(k*smax)
+mo=0
+!mo=ao/(k*smax)
 
 timesize=0.05 !шаг по времени в задаче
 
-linesize=6    !число разбиений на плоскостях симметрии
+linesize=1    !число разбиений на плоскостях симметрии
 meshsize=1    !размер элементов сетки
 
 !==================дано==================
@@ -158,7 +157,8 @@ RSYS,112
 
 /DELETE, D:\stressatnodes, txt
 /DELETE, D:\thickdepStress, txt
-/DELETE, D:\doubleside, txt
+/DELETE, D:\doublesidewithoutMCH, txt
+
 
 *CREATE,ansuitmp12
 *MWRITE,lowcxcorrosion, D:\solidthicarray1231231, txt,, JIK, 2,
@@ -182,26 +182,26 @@ RSYS,112
 *END
 
 *CREATE,ansuitmp15
-*CFOPEN, 'D:\doubleside', txt,,append
+*CFOPEN, 'D:\doublesidewithoutMCH', txt,,append
 *VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,k,halfof,iniload,mi, , , ,, , , ,
 (10f10.4)
 *CFCLOS
 *END
 
 !================================цикл===============================================
-*DO, iniload, 0.25,0.25, 0.25
+*DO, iniload, 0.25,0.75, 0.25
 
     pr=(2*h*smax*iniload)/rc1*(b-rc1)/(2*b-rc1) !давление
 
-    *DO, k, 7, 7, 3
+    *DO, k, 100, 100, 1
 
         ai=0.05
-        !mi=0
-        mi=ai/(k*smax)
+        mi=0
+        !mi=ai/(k*smax)
 
         ao=0.05
-        !mo=0
-        mo=ao/(k*smax)
+        mo=0
+        !mo=ao/(k*smax)
         !==================================================перечитать задачу==============================
         /PREP7
         LSCLEAR,ALL 
