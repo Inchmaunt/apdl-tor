@@ -26,13 +26,13 @@ LDELE,All
 KDELE,All
 CSYS,0 
 !дано
-h=0.15 !толщина
+h=1 !толщина
 
-R2=5 !наружный радиус сечерия тора
+R2=6 !наружный радиус сечерия тора
 
 r1=R2-h !внутренний радиус сечерия тора
 
-b=2*R2 !радиус окружности тора
+b=R2-h !радиус окружности тора
 
 pr=2 !давление
 
@@ -56,8 +56,8 @@ tn2 = 2000 !техническое число 2
 
 *DO, i, 0, elemcount,1
 lowcXcyl(i+1,1,1) = Pi/elemcount*i
-lowcXcyl(i+1,2,1) = b+(R2-h)*COS(Pi/elemcount*i)
-lowcXcyl(i+1,3,1) = (R2-h)*SIN( Pi/elemcount*i)
+lowcXcyl(i+1,2,1) = b+(R2-h)*COS(Pi-Pi/elemcount*i)
+lowcXcyl(i+1,3,1) = (R2-h)*SIN(Pi/elemcount*i)
 K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
 *ENDDO
  
@@ -71,7 +71,6 @@ spl = 1
 *DIM, jyset, array, elemcount+1, nn*2
 *DIM, newcoordset, array, elemcount+1, 2
  
-
 
 !  !===============Узловой вектор ===============
 ! kk = 2 !степень     k
@@ -96,8 +95,7 @@ spl = 1
 !     *ENDIF
 ! *ENDDO
 
-
- !=============== Новый узловой вектор ===============
+!=============== Новый узловой вектор ===============
 kk = 2 !степень k
 n_v = elemcount + 1 ! число прямых участков n (число точек!!!)
 vecleng = kk + n_v! длина узлового вектора
@@ -159,7 +157,7 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
 
 !зафиксировать два значения в узловом векторе, и потом пробегать по ним всеми остальными значениями
 
-*DIM, basis_n, array, vecleng, kk*vecleng
+*DIM, basis_n, array, vecleng, vecleng, kk
 !basis_n(vecleng-1, n_v,1)=1
 
 *DO, mm, 1, vecleng-1, 1
@@ -188,26 +186,61 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
 
 
 
-*DO, j, vecleng+1, kk*vecleng, 1
-	*DO, i, 2, vecleng-kk, 1
-		
-		ttt=opennodevector(i,1,1)
+*DO, j, 2, kk, 1 !j это k из книжки (матрица трехмерная, вводим ось z)
+	*DO,s,1,vecleng-kk,1
+		*DO, i, 1, vecleng-kk, 1
+			
+			ttt=opennodevector(i+1,1,1) ! x_i из книжки
 
-		*IF, opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1), EQ, 0, THEN
-		basis_n(i,j,1) = ((opennodevector(i+kk-1,1,1)-ttt)*basis_n(i,j-vecleng+1,1)) / (opennodevector(i+kk-1,1,1) - opennodevector(i+1-1,1,1))
 
-		*ELSEIF, opennodevector(i+kk-1,1,1)-opennodevector(i+1-1,1,1), EQ, 0
-		basis_n(i,j,1) = basis_n(i,j-vecleng,1)*(ttt-opennodevector(i-1,1,1)) / (opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1))
-	
-		*ELSEIF, opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1), EQ, 0, AND, opennodevector(i+kk-1,1,1)-opennodevector(i+1-1,1,1), EQ, 0
-		basis_n(i,j,1) = 0
+			*IF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), NE, 0, THEN!проверяем ноль в первом знаменателе
+
+			basis_n(i,s,j) = ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1)) !второе слагаемое из уравнения 5-84b 
+
+
+
+			*ELSEIF, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0, AND, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), NE, 0  !проверяем ноль во втором знаменателе
+
+			basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) !первое слагаемое
 		
-		*ELSE
-		basis_n(i,j,1) = (basis_n(i,j-vecleng,1)*(ttt-opennodevector(i-1,1,1)) / (opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1))) + ((((opennodevector(i+kk-1,1,1)-ttt))*basis_n(i,j-vecleng+1,1)) / (opennodevector(i+kk-1,1,1) - opennodevector(i+1-1,1,1)))
-		
-		*ENDIF
+
+
+			*ELSEIF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0 !если нули в двух знаменателях сразу
+
+			basis_n(i,s,j) = 0
+			
+
+
+			*ELSE !когда все знаменатели ненулевые
+
+			basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) +  ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1))
+			
+			*ENDIF
+		*ENDDO
 	*ENDDO
 *ENDDO
+
+
+! *DO, j, vecleng+1, kk*vecleng, 1 !j это k из книжки
+! 	*DO, i, 2, vecleng-kk, 1
+		
+! 		ttt=opennodevector(i,1,1) ! x_i из книжки
+
+! 		*IF, opennodevector(i+kk-1-1,1,1)-ttt, EQ, 0, THEN !проверяем ноль в первом знаменателе
+! 		basis_n(i,j,1) = ((opennodevector(i+kk,1,1)-ttt)*basis_n(i+1,j-vecleng,1)) / (opennodevector(i+kk,1,1) - opennodevector(i+1,1,1)) !второе слагаемое из уравнения 5-84b 
+
+! 		*ELSEIF, opennodevector(i+kk-1,1,1)-opennodevector(i+1-1,1,1), EQ, 0 !проверяем ноль во втором знаменателе
+! 		basis_n(i,j,1) = basis_n(i,j-vecleng,1)*(ttt-opennodevector(i-1,1,1)) / (opennodevector(i+kk-1,1,1)-ttt) !первое слагаемое
+	
+! 		*ELSEIF, opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1), EQ, 0, AND, opennodevector(i+kk-1,1,1)-opennodevector(i+1-1,1,1), EQ, 0 !если нули в двух знаменателях сразу
+! 		basis_n(i,j,1) = 0
+		
+! 		*ELSE !когда все знаменатели ненулевые
+! 		basis_n(i,j,1) = (basis_n(i,j-vecleng,1)*(ttt-opennodevector(i-1,1,1)) / (opennodevector(i+kk-1-1,1,1)-opennodevector(i-1,1,1))) + ((((opennodevector(i+kk-1,1,1)-ttt))*basis_n(i,j-vecleng+1,1)) / (opennodevector(i+kk-1,1,1) - opennodevector(i+1-1,1,1)))
+		
+! 		*ENDIF
+! 	*ENDDO
+! *ENDDO
 
 
 ! *DO, j, vecleng+1, kk*vecleng, 1
@@ -237,44 +270,45 @@ horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
 
 !=============== Умножение весового вектора h на компонент базиса N и суммирование ===============
 
-*DIM, Sn, ARRAY, elemcount, elemcount
-*DO, j, 1, elemcount, 1	
-	*DO, i, 1, elemcount, 1
-		Sn(i,j,1) = VECTOR_H(1,j,1)*basis_n(i,(kk-1)*elemcount+j,1) 
+*DIM, Sn, ARRAY, splnn, vecleng-kk
+*DO, j, 1, vecleng-kk, 1	
+	*DO, i, 1, splnn, 1
+		Sn(i,j,1) = VECTOR_H(1,j,1)*basis_n(i,j,kk) 
 	*ENDDO
 *ENDDO
 
 
-*DIM, SnSUM, ARRAY, elemcount, elemcount
-*DO, j, 1, elemcount-1, 1	
-	*DO, i, 1, elemcount, 1
-		SnSUM(i,j+1,1) = SnSUM(i,j,1)+Sn(i,j+1,1)
+*DIM, SnSUM, ARRAY, splnn, vecleng-kk+1
+*DO, j, 0, elemcount, 1	
+	*DO, i, 1, vecleng-kk, 1
+		SnSUM(i,j+2,1) = SnSUM(i,j+1,1)+Sn(i,j+1,1)
 	*ENDDO
 *ENDDO
 
 !=============== Компоненты вектора R ===============
-*DIM, Rv, ARRAY, elemcount, elemcount
-*DO, j, 1, elemcount, 1	
-	*DO, i, 2, elemcount-kk, 1
-		RV(i,j,1) = Sn(i,j,1) / SnSUM(i,elemcount,1)
+*DIM, Rv, ARRAY, vecleng-kk, vecleng-kk
+*DO, j, 1, vecleng-kk, 1	
+	*DO, i, 2, vecleng-kk, 1
+		RV(i,j,1) = Sn(i,j,1) / SnSUM(i,vecleng-kk+1,1)
 	*ENDDO
 *ENDDO
 !=============== Точки ===============
-*DIM, nurbsX, array, vecleng, elemcount
-*DIM, nurbsY, array, vecleng, elemcount
-*DIM, nurbsXsum, array, vecleng, elemcount
-*DIM, nurbsYsum, array, vecleng, elemcount
-*DO, j, 1, elemcount, 1	
-	*Do,i, 1,elemcount, 1
-		nurbsX(i,j,1) = RV(j,i,1)*lowcXcyl(i,2,1)
-		nurbsY(i,j,1) = RV(j,i,1)*lowcXcyl(i,3,1)
+*DIM, nurbsX, array, vecleng-kk, vecleng-kk
+*DIM, nurbsY, array, vecleng-kk, vecleng-kk
+*DIM, nurbsXsum, array, vecleng-kk, vecleng-kk+1
+*DIM, nurbsYsum, array, vecleng-kk, vecleng-kk+1
+*DO, j, 1, vecleng-kk, 1	
+	*Do,i, 1,vecleng-kk, 1
+		nurbsX(i,j,1) = RV(i,j,1)*lowcXcyl(i,2,1)
+		nurbsY(i,j,1) = RV(i,j,1)*lowcXcyl(i,3,1)
 	*ENDDO
 *ENDDO
 
-*DO, j, 1, elemcount, 1	
-	*Do,i, 1,elemcount, 1
-		nurbsXsum(i+1,j,1) = nurbsX(i+1,j,1)+nurbsXsum(i,j,1)
-		nurbsYsum(i+1,j,1) = nurbsY(i+1,j,1)+nurbsYsum(i,j,1)
+*DO, j, 0, elemcount, 1	
+	*Do,i, 1,vecleng-kk, 1
+		nurbsXsum(i,j+2,1) = nurbsX(i,j+1,1)+nurbsXsum(i,j+1,1)
+		nurbsYsum(i,j+2,1) = nurbsY(i,j+1,1)+nurbsYsum(i,j+1,1)
+		K,i+8000,nurbsXsum(i,vecleng-kk+1,1),nurbsYsum(i,vecleng-kk+1,1),0,
 	*ENDDO
-	K,j+8000,nurbsXsum(elemcount+1,j,1),nurbsYsum(elemcount+1,j,1),0,
+	
 *ENDDO
