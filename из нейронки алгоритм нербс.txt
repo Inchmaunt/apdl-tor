@@ -1,0 +1,26 @@
+/PREP7  
+! Define control points  
+*DIM, P, ARRAY, 5, 2  
+P(1,1) = 0, 1, 2, 4, 5  ! X-coordinates  
+P(1,2) = 0, 2, 3, 1, 0  ! Y-coordinates  
+
+! Define weights  
+*DIM, W, ARRAY, 5  
+W(1) = 1, 1, 1, 1, 1    ! Weights for each control point  
+
+! Define knot vector  
+*DIM, U, ARRAY, 8  
+U(1) = 0, 0, 0, 1, 2, 3, 3, 3  ! Knot vector  
+
+! Create the NURBS curve  
+BSPLIN, 1, 5, P(1,1), P(1,2), , , W(1), U(1)  
+
+! Plot the curve  
+/DEVICE, VECTOR, ON  
+/VIEW, 1, 1, 1, 1  
+/ANG, 1  
+/REPLOT  
+
+
+
+

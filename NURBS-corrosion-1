@@ -31,324 +31,1236 @@ MPTEMP,1,0
 MPDATA,DENS,1,,7.8e-6 !плотность материала
 CSYS,0 
 
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-!================== ИСХОДНЫЕ ДАННЫЕ ГЕОМЕТРИЧЕСКИЕ РАЗМЕРЫ ==================
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-R2=50 !наружный радиус сечерия тора
-
-h=R2/5 !толщина
-
-r1=R2-h !внутренний радиус сечерия тора
-
-b=3*R2 !радиус окружности тора
-
-smax=450 !SMAX
-iniload=0.25 !коэффициент начального нагружения (в долях процента, для процента надо домножить на 100)
+!===========================================================================================================
+!===========================================================================================================
+!========================== ИСХОДНЫЕ ДАННЫЕ ГЕОМЕТРИЧЕСКИЕ РАЗМЕРЫ =========================================
 
 
-pr=(h*smax*iniload)/R2 !давление
-po=1e-6
+	R2=50 !наружный радиус сечерия тора
 
-elemcount=12 !число разбиений сетки
+	h=R2/5 !толщина
 
-Pi=ACOS(-1)  !число пи
+	r1=R2-h !внутренний радиус сечерия тора
 
-tn = 1000 !техническое число
+	b=3*R2 !радиус окружности тора
 
-k=1 !коэффициент механохимической коррозии по старой формуле (то есть, реальный коэффциент из статьи равен 1/k)
-
-ai=0.05
-!mi=0
-mi=ai/(k*smax)
-
-ao=0.05
-!mo=0
-mo=ao/(k*smax)
-
-timesize=0.05 !шаг по времени в задаче
-
-linesize=1    !число разбиений на плоскостях симметрии
-meshsize=1    !размер элементов сетки
-
-tnurbs = 8000 !техническое число 2
+	smax=450 !SMAX
+	iniload=0.25 !коэффициент начального нагружения (в долях процента, для процента надо домножить на 100)
 
 
-!==================массивы для задачи==================
+	pr=(h*smax*iniload)/R2 !давление
+	po=1e-6
 
-*DIM, lowcXcyl, array, elemcount+1, 3
-*DIM, lowcxstress, array, elemcount+1, 3
-*DIM, highcXcyl, array, elemcount+1, 3
-*DIM, highcxstress, array, elemcount+1, 3
-*DIM, lowcxcorrosion, array, elemcount+1, 3
-*DIM, highcxcorrosion, array, elemcount+1, 3
-*DIM, thickness, array, elemcount+1, 3
+	elemcount=12 !число разбиений сетки
 
-!================================== Первое построение геометрии ==================================
+	Pi=ACOS(-1)  !число пи
 
+	tn = 1000 !техническое число для перехода на внешний радиус окружности тора
 
-!координатные системы для работы на сплайнах
+	k=1 !коэффициент механохимической коррозии по старой формуле (то есть, реальный коэффциент из статьи равен 1/k)
 
-LOCAL,112,1,b,0,0, , , ,1,1,
-NROTAT,ALL
-LSCLEAR,ALL 
+	ai=0.05
+	!mi=0
+	mi=ai/(k*smax)
 
-!для внутренней поверхности
-LOCAL,117,0,b-r1,0,0, , , ,1,1,
-NROTAT,ALL
-LSCLEAR,ALL 
-!для внешней поверхности
-LOCAL,119,0,b-R2,0,0, , , ,1,1,
-NROTAT,ALL
-LSCLEAR,ALL 
+	ao=0.05
+	!mo=0
+	mo=ao/(k*smax)
 
-CSYS,117
-RSYS,117
-*DO, i, 0, elemcount,1
-lowcXcyl(i+1,1,1) = Pi/elemcount*i
-lowcXcyl(i+1,2,1) = r1+(r1)*COS(Pi-Pi/elemcount*i)
-lowcXcyl(i+1,3,1) = (r1)*SIN(Pi/elemcount*i)
-K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
-*ENDDO
+	timesize=0.05 !шаг по времени в задаче
 
-CSYS,119 
-RSYS,119
-*DO, i, 0, elemcount,1
-    highcXcyl(i+1,1,1) = Pi/elemcount*i
-    highcXcyl(i+1,2,1) = R2+R2*COS(Pi-Pi/elemcount*i)
-    highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
-K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
-*ENDDO 
+	linesize=1    !число разбиений на плоскостях симметрии
+	meshsize=1    !размер элементов сетки
 
-CSYS,0
-RSYS,0
-*DO, i, 0, elemcount, 1
-    thickness(i+1,1,1) = Pi/elemcount*i
-    thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
-    thickness(i+1,3,1) = ((highcXcyl(i+1,2,1)-lowcXcyl(i+1,2,1))**2 + (highcXcyl(i+1,3,1)-lowcXcyl(i+1,3,1))**2)**0.5
-*ENDDO
- 
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-!================== NURBS сплайн аппроксимация ==================
-!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	tnurbs = 8000 !техническое число для построения нового набора точек при помощи NURBS
 
-!====исходные данные
+!!!
 
-nn = (elemcount+1) !выбанное число точек сплайна
-splnn = nn !число точек
-spl = 1
-*DIM, jnset, array,  elemcount+1, 8
-*DIM, jset, array, elemcount+1, nn*2
-*DIM, jxset, array, elemcount+1, nn*2
-*DIM, jyset, array, elemcount+1, nn*2
-*DIM, newcoordset, array, elemcount+1, 2
+!========================== МАССИВЫ ДЛЯ ЗАДАЧИ =============================================================
 
 
 
-!============================== УЗЛОВОЙ ВЕКТОР =============================================
+	*DIM, lowcXcyl, array, elemcount+1, 3
+	*DIM, lowcxstress, array, elemcount+1, 3
+	*DIM, highcXcyl, array, elemcount+1, 3
+	*DIM, highcxstress, array, elemcount+1, 3
+	*DIM, lowcxcorrosion, array, elemcount+1, 3
+	*DIM, highcxcorrosion, array, elemcount+1, 3
+	*DIM, thickness, array, elemcount+1, 3
+	*DIM, testset, array, elemcount+1,4
 
-kk = 2 !степень k
-n_v = elemcount + 1 ! число прямых участков n (число точек!!!)
-vecleng = kk + n_v! длина узлового вектора
-hh = 1 ! Вес кривой
-
-*DIM, opennodevector, array, vecleng, 1
-*DIM, horda_c, array, elemcount+1, 4
-
-*DO, i, 1, elemcount,1
-horda_c(i+1,1,1) = lowcXcyl(i+1,2,1)-lowcXcyl(i,2,1)
-horda_c(i+1,2,1) = lowcXcyl(i+1,3,1)-lowcXcyl(i,3,1)
-horda_c(i+1,3,1) = (horda_c(i+1,1,1)**2 + horda_c(i+1,2,1)**2)**0.5
-horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
-*ENDDO
-
-*DO, i, 1, vecleng, 1 
-    *IF, i, LE, kk, AND, i, GE, 1, THEN ! участок под нули
-    opennodevector(i,1,1) = 0
-    *ELSE
-    *ENDIF
-
-    *IF, i, LE, n_v - kk + 1, AND, i, GE, 1, THEN ! участок под счет
-    opennodevector(i+kk,1,1) = (((i/(n_v-kk+2))*horda_c(i+1,3,1) + horda_c(i+1,4,1))/horda_c(elemcount+1,4,1))*(n_v-kk+2)
-    *ELSE
-    *ENDIF
-
-     *IF, i, LE, vecleng, AND, i, GE, n_v + 1, THEN ! участок под финал
-    opennodevector(i,1,1) = n_v - kk + 2
-    *ELSE
-    *ENDIF
-*ENDDO
+!!!
+!===========================================================================================================
+!===========================================================================================================
+!========================== Первое построение геометрии при помощи NURBS + ПЕРВЫЙ РАСЧЕТ ===================
 
 
-!============================== Функции базиса N цикл  =============================================
+	!координатные системы для работы на сплайнах
 
-!зафиксировать два значения в узловом векторе, и потом пробегать по ним всеми остальными значениями
+	LOCAL,112,1,b,0,0, , , ,1,1,
+	NROTAT,ALL
+	LSCLEAR,ALL 
 
-*DIM, basis_n, array, vecleng, vecleng, kk
-!basis_n(vecleng-1, n_v,1)=1
+	!для внутренней поверхности
+	LOCAL,117,0,b-r1,0,0, , , ,1,1,
+	NROTAT,ALL
+	LSCLEAR,ALL 
+	!для внешней поверхности
+	LOCAL,119,0,b-R2,0,0, , , ,1,1,
+	NROTAT,ALL
+	LSCLEAR,ALL 
 
-*DO, mm, 1, vecleng-1, 1
-	tt = opennodevector(mm,1,1)
-	*DO, i, 1, vecleng, 1 
-		*IF, tt, LT, opennodevector(mm+1,1,1), AND,  tt, GE, opennodevector(mm,1,1), THEN
-		basis_n(mm,mm,1)=1
-		*ELSE
-		basis_n(mm,mm,1)=0
-		*ENDIF
+	CSYS,117
+	!RSYS,117
+	*DO, i, 0, elemcount,1
+	lowcXcyl(i+1,1,1) = Pi/elemcount*i
+	lowcXcyl(i+1,2,1) = r1+(r1)*COS(Pi-Pi/elemcount*i)
+	lowcXcyl(i+1,3,1) = (r1)*SIN(Pi/elemcount*i)
+	K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
 	*ENDDO
-*ENDDO
 
-*DO, j, 2, kk, 1 !j это k из книжки (матрица трехмерная, вводим ось z)
-	*DO,s,1,vecleng-kk,1
-		*DO, i, 1, vecleng-kk, 1
-			
-			ttt=opennodevector(i+1,1,1) ! x_i из книжки
+	CSYS,119 
+	!RSYS,119
+	*DO, i, 0, elemcount,1
+		highcXcyl(i+1,1,1) = Pi/elemcount*i
+		highcXcyl(i+1,2,1) = R2+R2*COS(Pi-Pi/elemcount*i)
+		highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
+	K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+	*ENDDO 
 
-			*IF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), NE, 0, THEN!проверяем ноль в первом знаменателе
-			basis_n(i,s,j) = ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1)) !второе слагаемое из уравнения 5-84b 
-
-			*ELSEIF, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0, AND, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), NE, 0  !проверяем ноль во втором знаменателе
-			basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) !первое слагаемое
-		
-			*ELSEIF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0 !если нули в двух знаменателях сразу
-			basis_n(i,s,j) = 0
-			
-			*ELSE !когда все знаменатели ненулевые
-			basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) +  ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1))
-			
-			*ENDIF
-		*ENDDO
-	*ENDDO
-*ENDDO
-
-
-!============================================= Весовой вектор h  ==============================
-
-*DIM, VECTOR_H, ARRAY,1, ELEMCOUNT+1
-*DO,i, 1, ELEMCOUNT+1,1
-	*IF, i, EQ, (ELEMCOUNT/2)+1, THEN
-	VECTOR_H(1,i,1)=hh
-	*ELSE
-	VECTOR_H(1,i,1)=1
-	*ENDIF
-*ENDDO
-
-
-!=============== Умножение весового вектора h на компонент базиса N и суммирование ===============
-
-*DIM, Sn, ARRAY, splnn, vecleng-kk
-*DO, j, 1, vecleng-kk, 1	
-	*DO, i, 1, splnn, 1
-		Sn(i,j,1) = VECTOR_H(1,j,1)*basis_n(i,j,kk) 
-	*ENDDO
-*ENDDO
-
-
-*DIM, SnSUM, ARRAY, splnn, vecleng-kk+1
-*DO, j, 0, elemcount, 1	
-	*DO, i, 1, vecleng-kk, 1
-		SnSUM(i,j+2,1) = SnSUM(i,j+1,1)+Sn(i,j+1,1)
-	*ENDDO
-*ENDDO
-
-
-!============================== Компоненты вектора R =============================================
-
-
-*DIM, Rv, ARRAY, vecleng-kk, vecleng-kk
-*DO, j, 1, vecleng-kk, 1	
-	*DO, i, 2, vecleng-kk, 1
-		RV(i,j,1) = Sn(i,j,1) / SnSUM(i,vecleng-kk+1,1)
-	*ENDDO
-*ENDDO
-
-!============================================= Точки =============================================
-*DIM, lownurbsX, array, vecleng-kk, vecleng-kk
-*DIM, lownurbsY, array, vecleng-kk, vecleng-kk
-*DIM, lownurbsXsum, array, vecleng-kk, vecleng-kk+1
-*DIM, lownurbsYsum, array, vecleng-kk, vecleng-kk+1
-
-*DIM, highnurbsX, array, vecleng-kk, vecleng-kk
-*DIM, highnurbsY, array, vecleng-kk, vecleng-kk
-*DIM, highnurbsXsum, array, vecleng-kk, vecleng-kk+1
-*DIM, highnurbsYsum, array, vecleng-kk, vecleng-kk+1
-
-*DO, j, 1, vecleng-kk, 1	
-	*Do,i, 1,vecleng-kk, 1
-		lownurbsX(i,j,1) = RV(i,j,1)*lowcXcyl(i,2,1)
-		lownurbsY(i,j,1) = RV(i,j,1)*lowcXcyl(i,3,1)
-       	highnurbsX(i,j,1) = RV(i,j,1)*highcXcyl(i,2,1)
-		highnurbsY(i,j,1) = RV(i,j,1)*highcXcyl(i,3,1) 
-	*ENDDO
-*ENDDO
-
-*DO, j, 0, elemcount, 1	
-	*Do,i, 1,vecleng-kk, 1
-		lownurbsXsum(i,j+2,1) = lownurbsX(i,j+1,1)+lownurbsXsum(i,j+1,1)
-		lownurbsYsum(i,j+2,1) = lownurbsY(i,j+1,1)+lownurbsYsum(i,j+1,1)
-        highnurbsXsum(i,j+2,1) = highnurbsX(i,j+1,1)+highnurbsXsum(i,j+1,1)
-		highnurbsYsum(i,j+2,1) = highnurbsY(i,j+1,1)+highnurbsYsum(i,j+1,1)
-
-! итоговые точки
-        CSYS,117
-		K,i+tnurbs,lownurbsXsum(i,vecleng-kk+1,1),lownurbsYsum(i,vecleng-kk+1,1),0,
-        CSYS,119
-        K,i+tnurbs+tn,highnurbsXsum(i,vecleng-kk+1,1),highnurbsYsum(i,vecleng-kk+1,1),0,
-
-
+	CSYS,0
+	!RSYS,0
+	*DO, i, 0, elemcount, 1
+		thickness(i+1,1,1) = Pi/elemcount*i
+		thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+		thickness(i+1,3,1) = ((highcXcyl(i+1,2,1)-lowcXcyl(i+1,2,1))**2 + (highcXcyl(i+1,3,1)-lowcXcyl(i+1,3,1))**2)**0.5
 	*ENDDO
 	
-*ENDDO
+
+	!============================================================================================================================
+	!++++++++++++++++++++++++++++++++++++++++ NURBS сплайн аппроксимация ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	!============================================================================================================================
+
+
+	!========================================= ИСХОДНЫЕ ДАННЫЕ ==================================================================
+
+		nn = (elemcount+1) !выбанное число точек сплайна
+		splnn = nn !число точек
+		spl = 1
+		*DIM, jnset, array,  elemcount+1, 8
+		*DIM, jset, array, elemcount+1, nn*2
+		*DIM, jxset, array, elemcount+1, nn*2
+		*DIM, jyset, array, elemcount+1, nn*2
+		*DIM, newcoordset, array, elemcount+1, 2
+
+
+	!
+	!========================================= УЗЛОВОЙ ВЕКТОР ==================================================================
+
+		kk = 2 !степень k
+		n_v = elemcount + 1 ! число прямых участков n (число точек!!!)
+		vecleng = kk + n_v! длина узлового вектора
+		hh = 1 ! Вес кривой
+
+		*DIM, opennodevector, array, vecleng, 1
+		*DIM, horda_c, array, elemcount+1, 4
+
+		*DO, i, 1, elemcount,1
+		horda_c(i+1,1,1) = lowcXcyl(i+1,2,1)-lowcXcyl(i,2,1)
+		horda_c(i+1,2,1) = lowcXcyl(i+1,3,1)-lowcXcyl(i,3,1)
+		horda_c(i+1,3,1) = (horda_c(i+1,1,1)**2 + horda_c(i+1,2,1)**2)**0.5
+		horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
+		*ENDDO
+
+		*DO, i, 1, vecleng, 1 
+			*IF, i, LE, kk, AND, i, GE, 1, THEN ! участок под нули
+			opennodevector(i,1,1) = 0
+			*ELSE
+			*ENDIF
+
+			*IF, i, LE, n_v - kk + 1, AND, i, GE, 1, THEN ! участок под счет
+			opennodevector(i+kk,1,1) = (((i/(n_v-kk+2))*horda_c(i+1,3,1) + horda_c(i+1,4,1))/horda_c(elemcount+1,4,1))*(n_v-kk+2)
+			*ELSE
+			*ENDIF
+
+			*IF, i, LE, vecleng, AND, i, GE, n_v + 1, THEN ! участок под финал
+			opennodevector(i,1,1) = n_v - kk + 2
+			*ELSE
+			*ENDIF
+		*ENDDO
+
+	!
+	!========================================= ФУНКЦИИ БАСИСА N ЦИКЛ  ==========================================================
+
+		!зафиксировать два значения в узловом векторе, и потом пробегать по ним всеми остальными значениями
+
+		*DIM, basis_n, array, vecleng, vecleng, kk
+		!basis_n(vecleng-1, n_v,1)=1
+
+		*DO, mm, 1, vecleng-1, 1
+			tt = opennodevector(mm,1,1)
+			*DO, i, 1, vecleng, 1 
+				*IF, tt, LT, opennodevector(mm+1,1,1), AND,  tt, GE, opennodevector(mm,1,1), THEN
+				basis_n(mm,mm,1)=1
+				*ELSE
+				basis_n(mm,mm,1)=0
+				*ENDIF
+			*ENDDO
+		*ENDDO
+
+		*DO, j, 2, kk, 1 !j это k из книжки (матрица трехмерная, вводим ось z)
+			*DO,s,1,vecleng-kk,1
+				*DO, i, 1, vecleng-kk, 1
+					
+					ttt=opennodevector(i+1,1,1) ! x_i из книжки
+
+					*IF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), NE, 0, THEN!проверяем ноль в первом знаменателе
+					basis_n(i,s,j) = ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1)) !второе слагаемое из уравнения 5-84b 
+
+					*ELSEIF, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0, AND, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), NE, 0  !проверяем ноль во втором знаменателе
+					basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) !первое слагаемое
+				
+					*ELSEIF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0 !если нули в двух знаменателях сразу
+					basis_n(i,s,j) = 0
+					
+					*ELSE !когда все знаменатели ненулевые
+					basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) +  ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1))
+					
+					*ENDIF
+				*ENDDO
+			*ENDDO
+		*ENDDO
+
+	!
+	!========================================= ВЕСОВОЙ ВЕКТОР h  ===============================================================
+
+		*DIM, VECTOR_H, ARRAY,1, ELEMCOUNT+1
+		*DO,i, 1, ELEMCOUNT+1,1
+			*IF, i, EQ, (ELEMCOUNT/2)+1, THEN
+			VECTOR_H(1,i,1)=hh
+			*ELSE
+			VECTOR_H(1,i,1)=1
+			*ENDIF
+		*ENDDO
+
+	!
+	!========================================= Умножение весового вектора h на компонент базиса N и суммирование ===============
+
+		*DIM, Sn, ARRAY, splnn, vecleng-kk
+		*DO, j, 1, vecleng-kk, 1	
+			*DO, i, 1, splnn, 1
+				Sn(i,j,1) = VECTOR_H(1,j,1)*basis_n(i,j,kk) 
+			*ENDDO
+		*ENDDO
+
+
+		*DIM, SnSUM, ARRAY, splnn, vecleng-kk+1
+		*DO, j, 0, elemcount, 1	
+			*DO, i, 1, vecleng-kk, 1
+				SnSUM(i,j+2,1) = SnSUM(i,j+1,1)+Sn(i,j+1,1)
+			*ENDDO
+		*ENDDO
+
+	!
+	!========================================= КОМПОНЕНТЫ ВЕКТОРА R ============================================================
+
+
+		*DIM, Rv, ARRAY, vecleng-kk, vecleng-kk
+		*DO, j, 1, vecleng-kk, 1	
+			*DO, i, 2, vecleng-kk, 1
+				RV(i,j,1) = Sn(i,j,1) / SnSUM(i,vecleng-kk+1,1)
+			*ENDDO
+		*ENDDO
+
+	
+	!
+	!========================================= ТОЧКИ И ЛИНИИ ===================================================================
+	
+		*DIM, lownurbsX, array, vecleng-kk, vecleng-kk
+		*DIM, lownurbsY, array, vecleng-kk, vecleng-kk
+		*DIM, lownurbsXsum, array, vecleng-kk, vecleng-kk+1
+		*DIM, lownurbsYsum, array, vecleng-kk, vecleng-kk+1
+
+		*DIM, highnurbsX, array, vecleng-kk, vecleng-kk
+		*DIM, highnurbsY, array, vecleng-kk, vecleng-kk
+		*DIM, highnurbsXsum, array, vecleng-kk, vecleng-kk+1
+		*DIM, highnurbsYsum, array, vecleng-kk, vecleng-kk+1
+
+		*DO, j, 1, vecleng-kk, 1	
+			*Do,i, 1,vecleng-kk, 1
+				lownurbsX(i,j,1) = RV(i,j,1)*lowcXcyl(i,2,1)
+				lownurbsY(i,j,1) = RV(i,j,1)*lowcXcyl(i,3,1)
+				highnurbsX(i,j,1) = RV(i,j,1)*highcXcyl(i,2,1)
+				highnurbsY(i,j,1) = RV(i,j,1)*highcXcyl(i,3,1) 
+			*ENDDO
+		*ENDDO
+
+		*DO, j, 0, elemcount, 1	
+			*Do,i, 1,vecleng-kk, 1
+				lownurbsXsum(i,j+2,1) = lownurbsX(i,j+1,1)+lownurbsXsum(i,j+1,1)
+				lownurbsYsum(i,j+2,1) = lownurbsY(i,j+1,1)+lownurbsYsum(i,j+1,1)
+				highnurbsXsum(i,j+2,1) = highnurbsX(i,j+1,1)+highnurbsXsum(i,j+1,1)
+				highnurbsYsum(i,j+2,1) = highnurbsY(i,j+1,1)+highnurbsYsum(i,j+1,1)
+
+		! итоговые точки
+				CSYS,117
+				K,i+tnurbs,lownurbsXsum(i,vecleng-kk+1,1),lownurbsYsum(i,vecleng-kk+1,1),0,
+				!CSYS,119
+				!K,i+tnurbs+tn,highnurbsXsum(i,vecleng-kk+1,1),highnurbsYsum(i,vecleng-kk+1,1),0,
+
+
+			*ENDDO
+			
+		*ENDDO
 
 
 
-!ВЫШЕ РАБОЧЕЕ, ниже STOP
+		!линии по новым точкам сплайна строим в разных циклах по очереди, чтобы сохранялась нумерация
+		!для внутренней поверхности
+		*DO, i, tnurbs+1, elemcount+tnurbs,1
+			LSTR, i, i+1
+		*ENDDO 
+		! !для внешней поверхности
+		! *DO, i, tnurbs+tn+1, elemcount+tnurbs+tn+1,1
+		! 	LSTR, i, i+1
+		! *ENDDO 
 
 
-!линии по новым точкам сплайна
-*DO, i, tnurbs+1, elemcount+tnurbs+1,1
-    LSTR, i+tn, i+1+tn
-    LSTR, i, i+1
-*ENDDO 
-!линии на плоскостях симметрии
-LSTR, 1+tnurbs, 1+tn+tnurbs
-LSTR, elemcount+1+tnurbs, elemcount+1+tn+tnurbs
-!Сетка
-*DO, i, 1, elemcount
-LESIZE,i, , ,1, , , , ,1
-*ENDDO
-*DO, i, elemcount+1, 2*elemcount
-LESIZE,i, , ,1, , , , ,1
-*ENDDO
-AL,ALL
-AMAP,1,1,elemcount+1,1001,elemcount+1000+1
+		!для внешней поверхности для односторонней поверхности (без NURBS)
+		*DO, i, tn+1, elemcount+tn,1
+			LSTR, i, i+1
+		*ENDDO 
 
 
-LOCAL,112,1,b,0,0, , , ,1,1,
-NROTAT,ALL
-LSCLEAR,ALL 
-!Давление
-*DO, i, 1, elemcount,1
-    SFL,i,PRES,pr,
-*ENDDO
+	!
+	!========================================= РАСЧЕТ НА ПРОЧНОСТЬ =============================================================
+		!линии на плоскостях симметрии 
+		LSTR, 1+tnurbs, 1+tn!+tnurbs !для односторонней коррозии заблокировал пока что
+		LSTR, elemcount+1+tnurbs, elemcount+1+tn!+tnurbs  !для односторонней коррозии заблокировал пока что
+		!Сетка
+		*DO, i, 1, elemcount
+		LESIZE,i, , ,1, , , , ,1
+		*ENDDO
+		*DO, i, elemcount+1, 2*elemcount
+		LESIZE,i, , ,1, , , , ,1
+		*ENDDO
+		AL,ALL
+		!структурированная сетка 
+		AMAP,1,tnurbs+1,tnurbs+elemcount+1,tn+1,tn+elemcount+1
 
-*DO, i, elemcount+1, elemcount+elemcount,1
-    SFL,i,PRES,po,
-*ENDDO
-!граничные условия displacement 
-DL,elemcount*2+1,1, UY, ,  
-DL,elemcount*2+2,1, UY, ,  
+
+		LOCAL,112,1,b,0,0, , , ,1,1,
+		NROTAT,ALL
+		LSCLEAR,ALL 
+		!Давление внутреннее
+		*DO, i, 1, elemcount,1
+			SFL,i,PRES,pr,
+		*ENDDO
+		!давление внешнее
+		*DO, i, elemcount+1, elemcount+elemcount,1
+			SFL,i,PRES,po,
+		*ENDDO
+		!граничные условия displacement 
+		DL,elemcount*2+1,1, UY, ,  
+		DL,elemcount*2+2,1, UY, ,  
 
 
-CSYS,0 
-CSYS,112
+		CSYS,0 
+		CSYS,112
 
-FINISH  
-/SOL
-!/STATUS,SOLU
-SOLVE
-/Post1
-!
-!
-!
-RSYS,112
+		FINISH  
+		/SOL
+		!/STATUS,SOLU
+		SOLVE
+		/Post1
+		!
+		!
+		!
+		RSYS,112
+		
+
+
+
+
+
+
+
+
+
+!!!
+!===========================================================================================================
+!===========================================================================================================
+!========================= РЕШЕНИЕ ЗАДАЧИ О КОРРОЗИИ =======================================================
+
+
+	!===================== ФАЙЛЫ ===========================================================================
+
+
+		/DELETE, D:\doubleside, txt
+
+
+		!***время****толщина****напряжения****окружная координата max напряжений****напряжения на внешней поверхности****координата****k****начлаьная нагрузка
+		*CREATE,ansuitmp15
+		*CFOPEN, 'D:\doubleside', txt,,append
+		*VWRITE,t1,k,iniload,,,, ,,,,, , , ,, , , ,
+		(3f10.4)
+		*CFCLOS
+		*END
+	!!!
+	!===================== ЦИКЛ ПО НАЧАЛЬНОЙ НАГРУЗКЕ ======================================================
+
+		*DO, iniload, 0.25,0.25, 0.25
+
+			pr=(h*smax*iniload)/R2 !давление
+			!===================== ЦИКЛ по K ================================================================
+			*DO, k, 1, 1, 1
+
+				ai=0.05
+				!mi=0
+				mi=ai/(k*smax)
+
+				ao=0.05
+				!mo=0
+				mo=ao/(k*smax)
+				!==================================================перечитать задачу==============================
+				/PREP7
+				LSCLEAR,ALL 
+				ACLEAR,1
+				ADELE, ALL
+				LDELE,All
+				KDELE,All
+				CSYS,0 
+				
+				!========================== Второе построение геометрии при помощи NURBS =======================
+
+
+					!координатные системы для работы на сплайнах
+
+					LOCAL,112,1,b,0,0, , , ,1,1,
+					NROTAT,ALL
+					LSCLEAR,ALL 
+
+					!для внутренней поверхности
+					LOCAL,117,0,b-r1,0,0, , , ,1,1,
+					NROTAT,ALL
+					LSCLEAR,ALL 
+					!для внешней поверхности
+					LOCAL,119,0,b-R2,0,0, , , ,1,1,
+					NROTAT,ALL
+					LSCLEAR,ALL 
+
+					CSYS,117
+					!RSYS,117
+					*DO, i, 0, elemcount,1
+					lowcXcyl(i+1,1,1) = Pi/elemcount*i
+					lowcXcyl(i+1,2,1) = r1+(r1)*COS(Pi-Pi/elemcount*i)
+					lowcXcyl(i+1,3,1) = (r1)*SIN(Pi/elemcount*i)
+					K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+					*ENDDO
+
+					CSYS,119 
+					!RSYS,119
+					*DO, i, 0, elemcount,1
+						highcXcyl(i+1,1,1) = Pi/elemcount*i
+						highcXcyl(i+1,2,1) = R2+R2*COS(Pi-Pi/elemcount*i)
+						highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
+					K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+					*ENDDO 
+
+					CSYS,0
+					!RSYS,0
+					*DO, i, 0, elemcount, 1
+						thickness(i+1,1,1) = Pi/elemcount*i
+						thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+						thickness(i+1,3,1) = ((highcXcyl(i+1,2,1)-lowcXcyl(i+1,2,1))**2 + (highcXcyl(i+1,3,1)-lowcXcyl(i+1,3,1))**2)**0.5
+					*ENDDO
+					
+
+
+					!====исходные данные
+
+					nn = (elemcount+1) !выбанное число точек сплайна
+					splnn = nn !число точек
+					spl = 1
+					!*DIM, jnset, array,  elemcount+1, 8
+					!*DIM, jset, array, elemcount+1, nn*2
+					!*DIM, jxset, array, elemcount+1, nn*2
+					!*DIM, jyset, array, elemcount+1, nn*2
+					!*DIM, newcoordset, array, elemcount+1, 2
+
+
+
+					!============================================================================================================================
+					!++++++++++++++++++++++++++++++++++++++++ NURBS сплайн аппроксимация ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+					!============================================================================================================================
+
+
+						!========================================= ИСХОДНЫЕ ДАННЫЕ ==================================================================
+
+							!nn = (elemcount+1) !выбанное число точек сплайна
+							!splnn = nn !число точек
+							!spl = 1
+							!*DIM, jnset, array,  elemcount+1, 8
+							!*DIM, jset, array, elemcount+1, nn*2
+							!*DIM, jxset, array, elemcount+1, nn*2
+							!*DIM, jyset, array, elemcount+1, nn*2
+							!*DIM, newcoordset, array, elemcount+1, 2
+
+
+						!
+						!========================================= УЗЛОВОЙ ВЕКТОР ==================================================================
+
+							!kk = 2 !степень k
+							!n_v = elemcount + 1 ! число прямых участков n (число точек!!!)
+							!vecleng = kk + n_v! длина узлового вектора
+							!hh = 1 ! Вес кривой
+
+							!*DIM, opennodevector, array, vecleng, 1
+							!*DIM, horda_c, array, elemcount+1, 4
+
+							*DO, i, 1, elemcount,1
+								horda_c(i+1,1,1) = lowcXcyl(i+1,2,1)-lowcXcyl(i,2,1)
+								horda_c(i+1,2,1) = lowcXcyl(i+1,3,1)-lowcXcyl(i,3,1)
+								horda_c(i+1,3,1) = (horda_c(i+1,1,1)**2 + horda_c(i+1,2,1)**2)**0.5
+								horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
+							*ENDDO
+
+							*DO, i, 1, vecleng, 1 
+								*IF, i, LE, kk, AND, i, GE, 1, THEN ! участок под нули
+								opennodevector(i,1,1) = 0
+								*ELSE
+								*ENDIF
+
+								*IF, i, LE, n_v - kk + 1, AND, i, GE, 1, THEN ! участок под счет
+								opennodevector(i+kk,1,1) = (((i/(n_v-kk+2))*horda_c(i+1,3,1) + horda_c(i+1,4,1))/horda_c(elemcount+1,4,1))*(n_v-kk+2)
+								*ELSE
+								*ENDIF
+
+								*IF, i, LE, vecleng, AND, i, GE, n_v + 1, THEN ! участок под финал
+								opennodevector(i,1,1) = n_v - kk + 2
+								*ELSE
+								*ENDIF
+							*ENDDO
+
+						!
+						!========================================= ФУНКЦИИ БАСИСА N ЦИКЛ  ==========================================================
+
+							!зафиксировать два значения в узловом векторе, и потом пробегать по ним всеми остальными значениями
+
+							!*DIM, basis_n, array, vecleng, vecleng, kk
+							!basis_n(vecleng-1, n_v,1)=1
+
+							*DO, mm, 1, vecleng-1, 1
+								tt = opennodevector(mm,1,1)
+								*DO, i, 1, vecleng, 1 
+									*IF, tt, LT, opennodevector(mm+1,1,1), AND,  tt, GE, opennodevector(mm,1,1), THEN
+									basis_n(mm,mm,1)=1
+									*ELSE
+									basis_n(mm,mm,1)=0
+									*ENDIF
+								*ENDDO
+							*ENDDO
+
+							*DO, j, 2, kk, 1 !j это k из книжки (матрица трехмерная, вводим ось z)
+								*DO,s,1,vecleng-kk,1
+									*DO, i, 1, vecleng-kk, 1
+										
+										ttt=opennodevector(i+1,1,1) ! x_i из книжки
+
+										*IF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), NE, 0, THEN!проверяем ноль в первом знаменателе
+										basis_n(i,s,j) = ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1)) !второе слагаемое из уравнения 5-84b 
+
+										*ELSEIF, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0, AND, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), NE, 0  !проверяем ноль во втором знаменателе
+										basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) !первое слагаемое
+									
+										*ELSEIF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0 !если нули в двух знаменателях сразу
+										basis_n(i,s,j) = 0
+										
+										*ELSE !когда все знаменатели ненулевые
+										basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) +  ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1))
+										
+										*ENDIF
+									*ENDDO
+								*ENDDO
+							*ENDDO
+
+						!
+						!========================================= ВЕСОВОЙ ВЕКТОР h  ===============================================================
+
+							!*DIM, VECTOR_H, ARRAY,1, ELEMCOUNT+1
+							*DO,i, 1, ELEMCOUNT+1,1
+								*IF, i, EQ, (ELEMCOUNT/2)+1, THEN
+								VECTOR_H(1,i,1)=hh
+								*ELSE
+								VECTOR_H(1,i,1)=1
+								*ENDIF
+							*ENDDO
+
+						!
+						!========================================= Умножение весового вектора h на компонент базиса N и суммирование ===============
+
+							!*DIM, Sn, ARRAY, splnn, vecleng-kk
+							*DO, j, 1, vecleng-kk, 1	
+								*DO, i, 1, splnn, 1
+									Sn(i,j,1) = VECTOR_H(1,j,1)*basis_n(i,j,kk) 
+								*ENDDO
+							*ENDDO
+
+
+							!*DIM, SnSUM, ARRAY, splnn, vecleng-kk+1
+							*DO, j, 0, elemcount, 1	
+								*DO, i, 1, vecleng-kk, 1
+									SnSUM(i,j+2,1) = SnSUM(i,j+1,1)+Sn(i,j+1,1)
+								*ENDDO
+							*ENDDO
+
+						!
+						!========================================= КОМПОНЕНТЫ ВЕКТОРА R ============================================================
+
+
+							!*DIM, Rv, ARRAY, vecleng-kk, vecleng-kk
+							*DO, j, 1, vecleng-kk, 1	
+								*DO, i, 2, vecleng-kk, 1
+									RV(i,j,1) = Sn(i,j,1) / SnSUM(i,vecleng-kk+1,1)
+								*ENDDO
+							*ENDDO
+
+						
+						!
+						!========================================= ТОЧКИ И ЛИНИИ ===================================================================
+						
+							!*DIM, lownurbsX, array, vecleng-kk, vecleng-kk
+							!*DIM, lownurbsY, array, vecleng-kk, vecleng-kk
+							!*DIM, lownurbsXsum, array, vecleng-kk, vecleng-kk+1
+							!*DIM, lownurbsYsum, array, vecleng-kk, vecleng-kk+1
+
+							! *DIM, highnurbsX, array, vecleng-kk, vecleng-kk
+							! *DIM, highnurbsY, array, vecleng-kk, vecleng-kk
+							! *DIM, highnurbsXsum, array, vecleng-kk, vecleng-kk+1
+							! *DIM, highnurbsYsum, array, vecleng-kk, vecleng-kk+1
+
+							*DO, j, 1, vecleng-kk, 1	
+								*Do,i, 1,vecleng-kk, 1
+									lownurbsX(i,j,1) = RV(i,j,1)*lowcXcyl(i,2,1)
+									lownurbsY(i,j,1) = RV(i,j,1)*lowcXcyl(i,3,1)
+									highnurbsX(i,j,1) = RV(i,j,1)*highcXcyl(i,2,1)
+									highnurbsY(i,j,1) = RV(i,j,1)*highcXcyl(i,3,1) 
+								*ENDDO
+							*ENDDO
+
+							*DO, j, 0, elemcount, 1	
+								*Do,i, 1,vecleng-kk, 1
+									lownurbsXsum(i,j+2,1) = lownurbsX(i,j+1,1)+lownurbsXsum(i,j+1,1)
+									lownurbsYsum(i,j+2,1) = lownurbsY(i,j+1,1)+lownurbsYsum(i,j+1,1)
+									highnurbsXsum(i,j+2,1) = highnurbsX(i,j+1,1)+highnurbsXsum(i,j+1,1)
+									highnurbsYsum(i,j+2,1) = highnurbsY(i,j+1,1)+highnurbsYsum(i,j+1,1)
+
+							! итоговые точки
+									CSYS,117
+									K,i+tnurbs,lownurbsXsum(i,vecleng-kk+1,1),lownurbsYsum(i,vecleng-kk+1,1),0,
+									!CSYS,119
+									!K,i+tnurbs+tn,highnurbsXsum(i,vecleng-kk+1,1),highnurbsYsum(i,vecleng-kk+1,1),0,
+
+
+								*ENDDO
+								
+							*ENDDO
+
+
+
+							!линии по новым точкам сплайна строим в разных циклах по очереди, чтобы сохранялась нумерация
+							!для внутренней поверхности
+							*DO, i, tnurbs+1, elemcount+tnurbs,1
+								LSTR, i, i+1
+							*ENDDO 
+							! !для внешней поверхности
+							! *DO, i, tnurbs+tn+1, elemcount+tnurbs+tn+1,1
+							! 	LSTR, i, i+1
+							! *ENDDO 
+
+
+							!для внешней поверхности для односторонней поверхности (без NURBS)
+							*DO, i, tn+1, elemcount+tn,1
+								LSTR, i, i+1
+							*ENDDO 
+
+
+						!
+						!========================================= РАСЧЕТ НА ПРОЧНОСТЬ С ВЫБОРОМ ТОЛЬКО НУЖНЫХ НАМ ТОЧЕК ===========================
+							!линии на плоскостях симметрии 
+							LSTR, 1+tnurbs, 1+tn!+tnurbs !для односторонней коррозии заблокировал пока что
+							LSTR, elemcount+1+tnurbs, elemcount+1+tn!+tnurbs  !для односторонней коррозии заблокировал пока что
+							!Сетка
+							*DO, i, 1, elemcount
+							LESIZE,i, , ,1, , , , ,1
+							*ENDDO
+							*DO, i, elemcount+1, 2*elemcount
+							LESIZE,i, , ,1, , , , ,1
+							*ENDDO
+							AL,ALL
+							!структурированная сетка 
+							AMAP,1,tnurbs+1,tnurbs+elemcount+1,tn+1,tn+elemcount+1
+
+
+							LOCAL,112,1,b,0,0, , , ,1,1,
+							NROTAT,ALL
+							LSCLEAR,ALL 
+							!Давление внутреннее
+							*DO, i, 1, elemcount,1
+								SFL,i,PRES,pr,
+							*ENDDO
+							!давление внешнее
+							*DO, i, elemcount+1, elemcount+elemcount,1
+								SFL,i,PRES,po,
+							*ENDDO
+							!граничные условия displacement 
+							DL,elemcount*2+1,1, UY, ,  
+							DL,elemcount*2+2,1, UY, ,  
+
+
+							CSYS,0 
+							CSYS,112
+
+							FINISH  
+							/SOL
+							!/STATUS,SOLU
+							SOLVE
+							/Post1
+							!
+							!
+							!
+							RSYS,112
+							
+							!
+							!выбор только нужных нам узлов на поврхностях через selection
+
+							RSYS,112
+							KSEL, S, KP,,1+tnurbs,elemcount+tnurbs
+							NSLK,S
+							*GET, nodelow, NODE,0, COUNT
+							Selnode=0
+
+							*Do,i,1,nodelow
+								NodeNo=NDNEXT(SelNode) !NDNEXT(N) Next selected node having a node number greater than N.
+								testset(i,1,1)= NodeNo
+								*GET,testset(i,2,1),NODE,testset(i,1,1),S,Y
+								SelNode=NodeNo
+							*Enddo
+
+							KSEL,ALL
+
+							KSEL, S, KP,,tn+1,tn+elemcount
+							NSLK,S
+							*GET, nodehigh, NODE,0, COUNT
+							Selnode=0
+
+							*Do,i,1,nodehigh
+								NodeNo=NDNEXT(SelNode) !NDNEXT(N) Next selected node having a node number greater than N.
+								testset(i,3,1)= NodeNo
+								*GET,testset(i,4,1),NODE,testset(i,3,1),S,Y
+								SelNode=NodeNo
+							*Enddo
+
+
+
+
+
+
+						!
+					!============================================================================================================================
+
+				h2=h*0.1 !определение критической толщины
+
+
+				!===================== ВРЕМЕННОЙ ЦИКЛ =============================================================
+					*DO, t1, 0, 50, timesize
+
+
+					!определяем напряжения в узлах на поверхности
+					!t1=0.07
+					/POST1
+					RSYS,112
+					CSYS,112
+
+					KSEL, S, KP,,1+tnurbs,elemcount+tnurbs
+					NSLK,S
+					*GET, nodelow, NODE,0, COUNT
+					Selnode=0
+
+					*Do,i,1,nodelow
+						NodeNo=NDNEXT(SelNode) !NDNEXT(N) Next selected node having a node number greater than N.
+						testset(i,1,1)= NodeNo
+						*GET,testset(i,2,1),NODE,testset(i,1,1),S,Y
+						SelNode=NodeNo
+					*Enddo
+
+					KSEL,ALL
+
+					KSEL, S, KP,,tn+1,tn+elemcount
+					NSLK,S
+					*GET, nodehigh, NODE,0, COUNT
+					Selnode=0
+
+					*Do,i,1,nodehigh
+						NodeNo=NDNEXT(SelNode) !NDNEXT(N) Next selected node having a node number greater than N.
+						testset(i,3,1)= NodeNo
+						*GET,testset(i,4,1),NODE,testset(i,3,1),S,Y
+						SelNode=NodeNo
+					*Enddo
+
+					
+					!================================первое напряжение============================
+					!================================первое напряжение============================
+					!================================первое напряжение============================
+
+					!================================первое напряжение============================
+
+					
+					
+					*IF, t1, EQ, timesize, THEN !timesize
+					/POST1
+					*VSCFUN, initialstress, MAX, lowcxstress(1,1)
+
+						*ELSE
+
+							*IF, t1, EQ, 0, THEN
+								RSYS,112
+								CSYS,112
+								/Post1
+								/EFACET,1   
+								PLNSOL, S, Y, 2, 5.0   
+
+								!SCREENSHOT
+								!*
+								!*
+								/RGB,INDEX,100,100,100, 0   
+								/RGB,INDEX, 80, 80, 80,13   
+								/RGB,INDEX, 60, 60, 60,14   
+								/RGB,INDEX, 0, 0, 0,15  
+								/SHOW,PNG,,0
+								PNGR,COMP,1,-1  
+								PNGR,ORIENT,HORIZ   
+								PNGR,COLOR,2
+								PNGR,TMOD,1 
+								/GFILE,1600, 
+								!*
+								!*
+								/REPLOT 
+								/SHOW,CLOSE 
+								/DEVICE,VECTOR,0
+								!*
+								!*
+								!END OF SCREENSHOT
+							*ENDIF
+
+							*DO, W, 1, 30, 0.5
+								*IF, t1, EQ, W, THEN
+									RSYS,112
+									CSYS,112
+									/Post1
+									/EFACET,1   
+									PLNSOL, S, Y, 0, 5.0   
+
+									!SCREENSHOT
+									!*
+									!*
+									/RGB,INDEX,100,100,100, 0   
+									/RGB,INDEX, 80, 80, 80,13   
+									/RGB,INDEX, 60, 60, 60,14   
+									/RGB,INDEX, 0, 0, 0,15  
+									/SHOW,PNG,,0
+									PNGR,COMP,1,-1  
+									PNGR,ORIENT,HORIZ   
+									PNGR,COLOR,2
+									PNGR,TMOD,1 
+									/GFILE,1600, 
+									!*
+									!*
+									/REPLOT 
+									/SHOW,CLOSE 
+									/DEVICE,VECTOR,0
+									!*
+									!*
+									!END OF SCREENSHOT
+								*ENDIF
+							*ENDDO
+
+
+							*DO, i, 0, elemcount,1
+								lowcxstress(i+1,1,1) = testset(i+1,2,1)
+								lowcxstress(i+1,2,1) = Pi/elemcount*i
+								*IF, lowcxstress(i+1,1,1), LT, 0, THEN
+									lowcxstress(i+1,3,1)=-lowcxstress(i+1,1,1)
+									*ELSE
+									lowcxstress(i+1,3,1)=lowcxstress(i+1,1,1)
+								*ENDIF
+							*ENDDO
+
+
+							*DO, i, 0, elemcount,1
+								*GET, highcxstress(i+1,1,1), NODE, elemcount+i+1+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
+								highcxstress(i+1,2,1) = Pi/elemcount*i
+
+								*IF, highcxstress(i+1,1,1), LT, 0, THEN
+									highcxstress(i+1,3,1)=-highcxstress(i+1,1,1)
+									*ELSE
+									highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
+								*ENDIF
+							*ENDDO
+
+							!вычисляем новую геометрию по коррозии
+							*DO, i, 0, elemcount, 1
+								lowcxcorrosion(i+1,1,1) = Pi/elemcount*i
+								lowcxcorrosion(i+1,2,1) = (r1)+((r1)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(Pi-Pi/elemcount*i)
+								lowcxcorrosion(i+1,3,1) = ((r1)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*SIN(Pi/elemcount*i)
+							*ENDDO
+
+
+							*DO, i, 0, elemcount, 1
+								highcxcorrosion(i+1,1,1) = Pi/elemcount*i
+								highcxcorrosion(i+1,2,1) = (R2)+(R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*COS(Pi-Pi/elemcount*i)
+								highcxcorrosion(i+1,3,1) = (R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*SIN(Pi/elemcount*i)
+							*ENDDO
+
+
+							*DO, i, 0, elemcount, 1
+								thickness(i+1,1,1) = Pi/elemcount*i
+								thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+								thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
+							*ENDDO
+
+							!удаляем старое и перестраиваем
+							/PREP7
+							LSCLEAR,ALL 
+							ACLEAR,1
+							ADELE, ALL
+							LDELE,All
+							KDELE,All
+							CSYS,0 
+
+
+							!============================================================================================================================
+							!++++++++++++++++++++++++++++++++++++++++ NURBS сплайн аппроксимация ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+							!============================================================================================================================
+
+
+							!========================================= ИСХОДНЫЕ ДАННЫЕ ==================================================================
+
+								!nn = (elemcount+1) !выбанное число точек сплайна
+								!splnn = nn !число точек
+								!spl = 1
+								!*DIM, jnset, array,  elemcount+1, 8
+								!*DIM, jset, array, elemcount+1, nn*2
+								!*DIM, jxset, array, elemcount+1, nn*2
+								!*DIM, jyset, array, elemcount+1, nn*2
+								!*DIM, newcoordset, array, elemcount+1, 2
+								
+								!координатные системы для работы на сплайнах
+
+								LOCAL,112,1,b,0,0, , , ,1,1,
+								NROTAT,ALL
+								LSCLEAR,ALL 
+
+								!для внутренней поверхности
+								LOCAL,117,0,b-r1,0,0, , , ,1,1,
+								NROTAT,ALL
+								LSCLEAR,ALL 
+								!для внешней поверхности
+								LOCAL,119,0,b-R2,0,0, , , ,1,1,
+								NROTAT,ALL
+								LSCLEAR,ALL 
+
+								! CSYS,117
+								! !RSYS,117
+								! *DO, i, 0, elemcount,1
+								! lowcXcyl(i+1,1,1) = Pi/elemcount*i
+								! lowcXcyl(i+1,2,1) = r1+(r1)*COS(Pi-Pi/elemcount*i)
+								! lowcXcyl(i+1,3,1) = (r1)*SIN(Pi/elemcount*i)
+								! K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+								! *ENDDO
+
+								! CSYS,119 
+								! !RSYS,119
+								! *DO, i, 0, elemcount,1
+								! 	highcXcyl(i+1,1,1) = Pi/elemcount*i
+								! 	highcXcyl(i+1,2,1) = R2+R2*COS(Pi-Pi/elemcount*i)
+								! 	highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
+								! K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+								! *ENDDO 
+
+								! CSYS,0
+								! !RSYS,0
+								! *DO, i, 0, elemcount, 1
+								! 	thickness(i+1,1,1) = Pi/elemcount*i
+								! 	thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+								! 	thickness(i+1,3,1) = ((highcXcyl(i+1,2,1)-lowcXcyl(i+1,2,1))**2 + (highcXcyl(i+1,3,1)-lowcXcyl(i+1,3,1))**2)**0.5
+								! *ENDDO
+
+							!
+							!========================================= УЗЛОВОЙ ВЕКТОР ==================================================================
+
+								kk = 2 !степень k
+								n_v = elemcount + 1 ! число прямых участков n (число точек!!!)
+								vecleng = kk + n_v! длина узлового вектора
+								hh = 1 ! Вес кривой
+
+								!*DIM, opennodevector, array, vecleng, 1
+								!*DIM, horda_c, array, elemcount+1, 4
+
+								*DO, i, 1, elemcount,1
+								horda_c(i+1,1,1) = lowcxcorrosion(i+1,2,1)-lowcxcorrosion(i,2,1)
+								horda_c(i+1,2,1) = lowcxcorrosion(i+1,3,1)-lowcxcorrosion(i,3,1)
+								horda_c(i+1,3,1) = (horda_c(i+1,1,1)**2 + horda_c(i+1,2,1)**2)**0.5
+								horda_c(i+1,4,1) = horda_c(i+1,3,1) + horda_c(i,4,1)
+								*ENDDO
+
+								*DO, i, 1, vecleng, 1 
+									*IF, i, LE, kk, AND, i, GE, 1, THEN ! участок под нули
+									opennodevector(i,1,1) = 0
+									*ELSE
+									*ENDIF
+
+									*IF, i, LE, n_v - kk + 1, AND, i, GE, 1, THEN ! участок под счет
+									opennodevector(i+kk,1,1) = (((i/(n_v-kk+2))*horda_c(i+1,3,1) + horda_c(i+1,4,1))/horda_c(elemcount+1,4,1))*(n_v-kk+2)
+									*ELSE
+									*ENDIF
+
+									*IF, i, LE, vecleng, AND, i, GE, n_v + 1, THEN ! участок под финал
+									opennodevector(i,1,1) = n_v - kk + 2
+									*ELSE
+									*ENDIF
+								*ENDDO
+
+							!
+							!========================================= ФУНКЦИИ БАСИСА N ЦИКЛ  ==========================================================
+
+								!зафиксировать два значения в узловом векторе, и потом пробегать по ним всеми остальными значениями
+
+								!*DIM, basis_n, array, vecleng, vecleng, kk
+								!basis_n(vecleng-1, n_v,1)=1
+
+								*DO, mm, 1, vecleng-1, 1
+									tt = opennodevector(mm,1,1)
+									*DO, i, 1, vecleng, 1 
+										*IF, tt, LT, opennodevector(mm+1,1,1), AND,  tt, GE, opennodevector(mm,1,1), THEN
+											basis_n(mm,mm,1)=1
+										*ELSE
+											basis_n(mm,mm,1)=0
+										*ENDIF
+									*ENDDO
+								*ENDDO
+
+								*DO, j, 2, kk, 1 !j это k из книжки (матрица трехмерная, вводим ось z)
+									*DO,s,1,vecleng-kk,1
+										*DO, i, 1, vecleng-kk, 1
+											
+											ttt=opennodevector(i+1,1,1) ! x_i из книжки
+
+											*IF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), NE, 0, THEN!проверяем ноль в первом знаменателе
+											basis_n(i,s,j) = ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1)) !второе слагаемое из уравнения 5-84b 
+
+											*ELSEIF, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0, AND, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), NE, 0  !проверяем ноль во втором знаменателе
+											basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) !первое слагаемое
+										
+											*ELSEIF, opennodevector(i+kk-1,1,1)-opennodevector(i,1,1), EQ, 0, AND, opennodevector(i+kk,1,1)-opennodevector(i+1,1,1), EQ, 0 !если нули в двух знаменателях сразу
+											basis_n(i,s,j) = 0
+											
+											*ELSE !когда все знаменатели ненулевые
+											basis_n(i,s,j) = basis_n(i,s,j-1)*(ttt-opennodevector(i,1,1)) / (opennodevector(i+kk-1,1,1)-opennodevector(i,1,1)) +  ((opennodevector(i+kk,1,1)-ttt)*basis_n(i,s+1,j-1)) / (opennodevector(i+kk,1,1)-opennodevector(i+1,1,1))
+											
+											*ENDIF
+										*ENDDO
+									*ENDDO
+								*ENDDO
+
+							!
+							!========================================= ВЕСОВОЙ ВЕКТОР h  ===============================================================
+
+								!*DIM, VECTOR_H, ARRAY,1, ELEMCOUNT+1
+								*DO,i, 1, ELEMCOUNT+1,1
+									*IF, i, EQ, (ELEMCOUNT/2)+1, THEN
+									VECTOR_H(1,i,1)=hh
+									*ELSE
+									VECTOR_H(1,i,1)=1
+									*ENDIF
+								*ENDDO
+
+							!
+							!========================================= Умножение весового вектора h на компонент базиса N и суммирование ===============
+
+								!*DIM, Sn, ARRAY, splnn, vecleng-kk
+								*DO, j, 1, vecleng-kk, 1	
+									*DO, i, 1, splnn, 1
+										Sn(i,j,1) = VECTOR_H(1,j,1)*basis_n(i,j,kk) 
+									*ENDDO
+								*ENDDO
+
+
+								!*DIM, SnSUM, ARRAY, splnn, vecleng-kk+1
+								*DO, j, 0, elemcount, 1	
+									*DO, i, 1, vecleng-kk, 1
+										SnSUM(i,j+2,1) = SnSUM(i,j+1,1)+Sn(i,j+1,1)
+									*ENDDO
+								*ENDDO
+
+							!
+							!========================================= КОМПОНЕНТЫ ВЕКТОРА R ============================================================
+
+
+								!*DIM, Rv, ARRAY, vecleng-kk, vecleng-kk
+								*DO, j, 1, vecleng-kk, 1	
+									*DO, i, 2, vecleng-kk, 1
+										RV(i,j,1) = Sn(i,j,1) / SnSUM(i,vecleng-kk+1,1)
+									*ENDDO
+								*ENDDO
+
+							
+							!
+							!========================================= ТОЧКИ И ЛИНИИ ===================================================================
+							
+								!*DIM, lownurbsX, array, vecleng-kk, vecleng-kk
+								!*DIM, lownurbsY, array, vecleng-kk, vecleng-kk
+								!*DIM, lownurbsXsum, array, vecleng-kk, vecleng-kk+1
+								!*DIM, lownurbsYsum, array, vecleng-kk, vecleng-kk+1
+
+								!*DIM, highnurbsX, array, vecleng-kk, vecleng-kk
+								!*DIM, highnurbsY, array, vecleng-kk, vecleng-kk
+								!*DIM, highnurbsXsum, array, vecleng-kk, vecleng-kk+1
+								!*DIM, highnurbsYsum, array, vecleng-kk, vecleng-kk+1
+
+								*DO, j, 1, vecleng-kk, 1	
+									*Do,i, 1,vecleng-kk, 1
+										lownurbsX(i,j,1) = RV(i,j,1)*lowcxcorrosion(i,2,1)
+										lownurbsY(i,j,1) = RV(i,j,1)*lowcxcorrosion(i,3,1)
+										!highnurbsX(i,j,1) = RV(i,j,1)*lowcxcorrosion(i,2,1)
+										!highnurbsY(i,j,1) = RV(i,j,1)*lowcxcorrosion(i,3,1) 
+									*ENDDO
+								*ENDDO
+
+								*DO, j, 0, elemcount, 1	
+									*Do,i, 1,vecleng-kk, 1
+										lownurbsXsum(i,j+2,1) = lownurbsX(i,j+1,1)+lownurbsXsum(i,j+1,1)
+										lownurbsYsum(i,j+2,1) = lownurbsY(i,j+1,1)+lownurbsYsum(i,j+1,1)
+										!highnurbsXsum(i,j+2,1) = highnurbsX(i,j+1,1)+highnurbsXsum(i,j+1,1)
+										!highnurbsYsum(i,j+2,1) = highnurbsY(i,j+1,1)+highnurbsYsum(i,j+1,1)
+
+								! итоговые точки
+										CSYS,117
+										K,i+tnurbs,lownurbsXsum(i,vecleng-kk+1,1),lownurbsYsum(i,vecleng-kk+1,1),0,
+								!для внешней поверхности для односторонней поверхности (без NURBS)
+										CSYS,119 
+										!RSYS,119
+										K,j+1+tn,highcXcyl(j+1,2,1),highcXcyl(j+1,3,1),0,
+										
+
+
+									*ENDDO
+									
+								*ENDDO
+
+
+
+								!линии по новым точкам сплайна строим в разных циклах по очереди, чтобы сохранялась нумерация
+								!для внутренней поверхности
+								*DO, i, tnurbs+1, elemcount+tnurbs,1
+									LSTR, i, i+1
+								*ENDDO 
+								
+								! !для внешней поверхности
+								! *DO, i, tnurbs+tn+1, elemcount+tnurbs+tn+1,1
+								! 	LSTR, i, i+1
+								! *ENDDO 
+
+
+								*DO, i, tn+1, elemcount+tn,1
+									LSTR, i, i+1
+								*ENDDO 
+
+
+
+							!
+							
+
+							!линии на плоскостях симметрии 
+							LSTR, 1+tnurbs, 1+tn!+tnurbs !для односторонней коррозии заблокировал пока что
+							LSTR, elemcount+1+tnurbs, elemcount+1+tn!+tnurbs  !для односторонней коррозии заблокировал пока что
+							!Сетка
+							*DO, i, 1, elemcount
+							LESIZE,i, , ,1, , , , ,1
+							*ENDDO
+							*DO, i, elemcount+1, 2*elemcount
+							LESIZE,i, , ,1, , , , ,1
+							*ENDDO
+							AL,ALL
+							!структурированная сетка 
+							AMAP,1,tnurbs+1,tnurbs+elemcount+1,tn+1,tn+elemcount+1
+							!
+							!RSYS,112
+
+
+							!граничные условия в цилиндрической системе
+
+							LOCAL,112,1,b,0,0, , , ,1,1,
+							NROTAT,ALL
+							LSCLEAR,ALL 
+							
+							*DO, i, 1, elemcount,1
+								SFL,i,PRES,pr,
+							*ENDDO
+
+							*DO, i, elemcount+1, elemcount+elemcount,1
+								SFL,i,PRES,po,
+							*ENDDO
+
+							DL,elemcount*2+1,1, SYMM, ,  
+							DL,elemcount*2+2,1, SYMM, ,  
+
+
+							CSYS,0 
+							CSYS,112
+							!переходим в обычную СК и решаем
+
+							CSYS,0 
+							FINISH  
+							/SOL
+							SOLVE
+
+							!результаты (время, максимальное напряжение в узле, координата узла, минимальная толщина в узле)
+							
+							!массивы для расчета напряжений
+							*VSCFUN, DEPmaxstress, MAX, lowcxstress(1,3)
+							*VSCFUN, DEPmaxstressouter, MAX, highcxstress(1,3)
+
+							!max напряжения на внутренней поверхности
+							*VSCFUN, locstress, LMAX, lowcxstress(1,3)
+							Coordofmax = lowcxstress(locstress,2)*180/Pi
+
+							!max напряжения на внешней поверхности
+							*VSCFUN, locstressouter, LMAX, highcxstress(1,3)
+							Coordofmaxouter = highcxstress(locstressouter,2)*180/Pi   
+
+							!расчет толщины
+							*VSCFUN, DEPminthick, MIN, thickness(1,3)
+							*VSCFUN, locminthick, LMIN, thickness(1,3)
+							Coordofminthick = thickness(locminthick,2)
+							*VSCFUN, DEPmaxthick, MAX, thickness(1,3)
+							!halfof=(DEPmaxstress-initialstress)/(smax-initialstress)
+
+							
+							*use, ansuitmp15
+							
+					*ENDIF
+					!*IF, DEPminthick,LT,h2,OR,DEPmaxstress,GT,smax,EXIT
+					!*IF, DEPmaxstress,GT,smax,EXIT
+					!*ENDIF
+
+				*ENDDO
+				!закрыли временной цикл
+
+				EPLOT   
+				/REPLOT
+
+			*ENDDO
+			!закрыли цикл по k
+		*ENDDO
+	!закрыли цикл по начальной нагр
