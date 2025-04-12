@@ -1,0 +1,484 @@
+/PREP7  
+ 
+ET,1,PLANE182   
+
+KEYOPT,1,1,0
+KEYOPT,1,3,1
+KEYOPT,1,6,0
+
+ET,2,MASS21         ! Точечная масса для Remote Point
+KEYOPT,2,3,2        ! 2D вариант с 3 DOF (UX,UY,ROTZ)
+R,1,0,  
+
+!*  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,EX,1,,2e5   
+MPDATA,PRXY,1,,0.3  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,DENS,1,,7.85e-6
+
+/PREP7
+CSYS,0 
+
+!===========================================================================================================
+!========================== ФАЙЛЫ =========================================
+
+/DELETE, D:\doubleside, txt
+
+*CREATE,ansuitmp15
+*CFOPEN, 'D:\doubleside', txt,,append
+*VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,kk,halfof,iniload,mi, , , ,, , , ,
+(10f10.4)
+*CFCLOS
+*END
+
+!===========================================================================================================
+!========================== ИСХОДНЫЕ ДАННЫЕ ГЕОМЕТРИЧЕСКИЕ РАЗМЕРЫ =========================================
+
+
+    R2=50 !наружный радиус сечерия тора
+
+    refh=0.2 !относительная толщина
+
+    h=R2*refh !толщина
+
+    r1=R2-h !внутренний радиус сечерия тора
+
+    rc1=(R2+r1)/2 !срединный радиус поперечного сечения тора
+
+    refb=3 !относительный радиус окружности тора
+
+    b=refb*R2 !радиус окружности тора
+
+    smax=450 !SMAX для случая с b=2 R1 равно 350, для случая с b-20 R1 равно 408
+
+    iniload=0.25 !коэффициент начального нагружения (в долях процента, для процента надо домножить на 100)
+
+
+    pr=(2*h*smax*iniload)/rc1*(b-rc1)/(2*b-rc1) !давление
+    !pr=1
+    po=1e-6
+
+    elemcount=240 !число разбиений сетки
+
+    Pi=ACOS(-1)  !число пи
+
+    tn = 1000 !техническое число
+
+    k=0.5 ! В статье принята обратная величина, то есть расчет ведется для 1/k
+
+    t1=0 !начальный момент времени
+
+    ai=0.05
+    !mi=0
+    mi=ai/(k*smax)
+
+    ao=0.05
+    !ao=0
+    !mo=0
+    mo=ao/(k*smax)
+
+    timesize=0.1 !шаг по времени в задаче
+
+    linesize=20    !число разбиений на плоскостях симметрии
+    meshsize=1    !размер элементов сетки
+
+
+
+
+    !==================массивы для задачи==================
+
+    *DIM, lowcXcyl, array, elemcount+1, 3
+    *DIM, lowcxstress, array, elemcount+1, 3
+    *DIM, highcXcyl, array, elemcount+1, 3
+    *DIM, highcxstress, array, elemcount+1, 3
+    *DIM, lowcxcorrosion, array, elemcount+1, 3
+    *DIM, highcxcorrosion, array, elemcount+1, 3
+    *DIM, thickness, array, elemcount+1, 3
+    *DIM, testset, array, elemcount+1,4
+
+
+!==========================================================================================================
+!========================== ПЕРВОЕ ПОСТРОЕНИЕ ГЕОМЕТРИИ И РЕШЕНИЕ =========================================
+    *DO, i, 0, elemcount,1
+        lowcXcyl(i+1,1,1) = Pi/elemcount*i
+        lowcXcyl(i+1,2,1) = b+(R2-h)*COS(2*Pi/elemcount*i)
+        lowcXcyl(i+1,3,1) = (R2-h)*SIN(2*Pi/elemcount*i)
+        K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+    *ENDDO 
+    KDELE,elemcount+1
+
+    *DO, i, 1, elemcount-1,1
+        LSTR, i, i+1
+    *ENDDO 
+
+    LSTR, elemcount,1
+
+    *DO, i, 0, elemcount,1
+        highcXcyl(i+1,1,1) = Pi/elemcount*i
+        highcXcyl(i+1,2,1) = b+R2*COS(2*Pi/elemcount*i)
+        highcXcyl(i+1,3,1) = R2*SIN(2*Pi/elemcount*i)
+        K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+    *ENDDO 
+
+    KDELE,tn+elemcount+1
+
+    *DO, i, tn+1, tn+elemcount-1,1
+        LSTR, i, i+1
+    *ENDDO 
+
+    LSTR, tn+elemcount,tn+1
+
+    *DO, i, 1, elemcount
+        LESIZE,i, , ,1, , , , ,1
+    *ENDDO
+
+    *DO, i, elemcount+1, 2*elemcount
+        LESIZE,i, , ,1, , , , ,1
+    *ENDDO
+
+    AL,ALL
+    AMESH,1
+
+    LOCAL,112,1,b,0,0, , , ,1,1,
+
+    CSYS,0
+
+    N,9999,b,0,0
+    TYPE,2
+    E,9999  
+    D,9999,ALL,0
+
+    *GET, nNodes, NODE, 0, COUNT  
+    *DIM, weights, ARRAY, elemcount  
+    *DIM, intnodes, ARRAY, elemcount  
+
+    /PNUM,ELEM,0
+    /REPLOT 
+
+
+
+    *DO,i,1,elemcount,1
+
+        dist = SQRT((NX(i)-b)**2 + NY(i)**2)
+        weights(i) = 1/dist
+        CE,100,1,9999,UY,1,i+elemcount,UY,-weights(i), 9999,UX,1, 
+
+    *ENDDO
+
+    ! 5. Граничные условия (ВАЖНО!)
+    
+    *DO, i, 1, elemcount,1
+        SFL,i,PRES,pr
+    *ENDDO
+
+    CSYS,0 
+
+    FINISH  
+    /SOL
+    SOLVE
+    /Post1
+    RSYS,112
+
+    KSEL, S, KP,,1,elemcount+1
+    NSLK,S
+    *GET, nodelow, NODE,0, COUNT
+    Selnode=0
+
+    *Do,i,1,nodelow
+        NodeNo=NDNEXT(SelNode) !NDNEXT(N) Next selected node having a node number greater than N.
+        testset(i,1,1)= NodeNo
+        *GET,testset(i,2,1),NODE,testset(i,1,1),S,Y
+        SelNode=NodeNo
+    *Enddo
+
+    KSEL,ALL
+
+    KSEL, S, KP,,tn+1,tn+elemcount+1
+    NSLK,S
+    *GET, nodehigh, NODE,0, COUNT
+    Selnode=0
+
+    *Do,i,1,nodehigh
+        NodeNo=NDNEXT(SelNode) !NDNEXT(N) Next selected node having a node number greater than N.
+        testset(i,3,1)= NodeNo
+        *GET,testset(i,4,1),NODE,testset(i,3,1),S,Y
+        SelNode=NodeNo
+    *ENDDO
+
+    *DO, i, 0, elemcount,1
+        *GET, highcxstress(i+1,1,1), NODE, elemcount+i+1+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
+        highcxstress(i+1,2,1) = Pi/elemcount*i
+
+        *IF, highcxstress(i+1,1,1), LT, 0, THEN
+            highcxstress(i+1,3,1)=-highcxstress(i+1,1,1)
+            *ELSE
+            highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
+        *ENDIF
+    *ENDDO
+
+    !вычисляем новую геометрию по коррозии
+    *DO, i, 0, elemcount, 1
+        lowcxcorrosion(i+1,1,1) = Pi/elemcount*i
+        lowcxcorrosion(i+1,2,1) = b+((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(Pi/elemcount*i)
+        lowcxcorrosion(i+1,3,1) = ((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*SIN(Pi/elemcount*i)
+    *ENDDO
+
+
+    *DO, i, 0, elemcount, 1
+        highcxcorrosion(i+1,1,1) = Pi/elemcount*i
+        highcxcorrosion(i+1,2,1) = b+(R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*COS(Pi/elemcount*i)
+        highcxcorrosion(i+1,3,1) = (R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*SIN(Pi/elemcount*i)
+    *ENDDO
+
+
+    *DO, i, 0, elemcount, 1
+        thickness(i+1,1,1) = Pi/elemcount*i
+        thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+        thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
+    *ENDDO
+
+!==========================================================================================================
+!==================================================== ЦИКЛ ================================================
+
+    !====================================== ЦИКЛ ПО НАЧАЛЬНОЙ НАГРУЗКЕ ====================================
+        *DO, iniload, 0.25,0.5, 0.25
+
+            pr=(2*h*smax*iniload)/rc1*(b-rc1)/(2*b-rc1)  !давление
+        !====================================== ЦИКЛ ПО K =================================================
+            *DO, kk, 4, 4, 3
+
+                ai=0.05
+                    !ai=0
+                    !mi=0
+                mi=ai/(kk*smax)
+
+                    !ao=0.05
+                    ao=0
+                    mo=0
+                    !mo=ao/(kk*smax)   
+            !====================================== ВРЕМЕННОЙ ЦИКЛ ========================================
+                    *DO, t1, 0, 50, timesize
+                        /POST1
+                        RSYS,112
+                        CSYS,112
+                        *IF, t1, EQ, timesize, THEN
+
+                            *VSCFUN, initialstress, MAX, lowcxstress(1,1)
+
+                        *ELSE
+
+                            *IF, t1, EQ, 0, THEN
+                                RSYS,112
+                                CSYS,112
+                                /Post1
+                                /EFACET,1   
+                                PLNSOL, S, Y, 2, 5.0   
+
+                                !SCREENSHOT
+                                !*
+                                !*
+                                /RGB,INDEX,100,100,100, 0   
+                                /RGB,INDEX, 80, 80, 80,13   
+                                /RGB,INDEX, 60, 60, 60,14   
+                                /RGB,INDEX, 0, 0, 0,15  
+                                /SHOW,PNG,,0
+                                PNGR,COMP,1,-1  
+                                PNGR,ORIENT,HORIZ   
+                                PNGR,COLOR,2
+                                PNGR,TMOD,1 
+                                /GFILE,1600, 
+                                !*
+                                !*
+                                /REPLOT 
+                                /SHOW,CLOSE 
+                                /DEVICE,VECTOR,0
+                                !*
+                                !*
+                                !END OF SCREENSHOT
+                            *ENDIF
+
+                            *DO, W, 1, 30, 0.5
+                                *IF, t1, EQ, W, THEN
+                                    RSYS,112
+                                    CSYS,112
+                                    /Post1
+                                    /EFACET,1   
+                                    PLNSOL, S, Y, 0, 5.0   
+
+                                    !SCREENSHOT
+                                    !*
+                                    !*
+                                    /RGB,INDEX,100,100,100, 0   
+                                    /RGB,INDEX, 80, 80, 80,13   
+                                    /RGB,INDEX, 60, 60, 60,14   
+                                    /RGB,INDEX, 0, 0, 0,15  
+                                    /SHOW,PNG,,0
+                                    PNGR,COMP,1,-1  
+                                    PNGR,ORIENT,HORIZ   
+                                    PNGR,COLOR,2
+                                    PNGR,TMOD,1 
+                                    /GFILE,1600, 
+                                    !*
+                                    !*
+                                    /REPLOT 
+                                    /SHOW,CLOSE 
+                                    /DEVICE,VECTOR,0
+                                    !*
+                                    !*
+                                    !END OF SCREENSHOT
+                                *ENDIF
+                            *ENDDO
+
+                            *DO, i, 0, elemcount,1
+                                *GET, highcxstress(i+1,1,1), NODE, elemcount+i+1+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
+                                highcxstress(i+1,2,1) = Pi/elemcount*i
+
+                                *IF, highcxstress(i+1,1,1), LT, 0, THEN
+                                    highcxstress(i+1,3,1)=-highcxstress(i+1,1,1)
+                                    *ELSE
+                                    highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
+                                *ENDIF
+                            *ENDDO
+
+                            !вычисляем новую геометрию по коррозии
+                            *DO, i, 0, elemcount, 1
+                                lowcxcorrosion(i+1,1,1) = Pi/elemcount*i
+                                lowcxcorrosion(i+1,2,1) = b+((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(Pi/elemcount*i)
+                                lowcxcorrosion(i+1,3,1) = ((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*SIN(Pi/elemcount*i)
+                            *ENDDO
+
+
+                            *DO, i, 0, elemcount, 1
+                                highcxcorrosion(i+1,1,1) = Pi/elemcount*i
+                                highcxcorrosion(i+1,2,1) = b+(R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*COS(Pi/elemcount*i)
+                                highcxcorrosion(i+1,3,1) = (R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*SIN(Pi/elemcount*i)
+                            *ENDDO
+
+
+                            *DO, i, 0, elemcount, 1
+                                thickness(i+1,1,1) = Pi/elemcount*i
+                                thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+                                thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
+                            *ENDDO
+
+                            !удаляем старое и перестраиваем
+                            /PREP7
+                            LSCLEAR,ALL 
+                            ACLEAR,1
+                            ADELE, ALL
+                            LDELE,All
+                            KDELE,All
+                            CSYS,0 
+
+                            *DO, i, 0, elemcount,1
+                                K,i+1,lowcxcorrosion(i+1,2,1),lowcxcorrosion(i+1,3,1),0,
+                            *ENDDO 
+                            KDELE,elemcount+1
+
+                            *DO, i, 1, elemcount-1,1
+                                LSTR, i, i+1
+                            *ENDDO 
+
+                            LSTR, elemcount,1
+
+                            *DO, i, 0, elemcount,1
+                                K,i+1+tn,highcxcorrosion(i+1,2,1),highcxcorrosion(i+1,3,1),0,
+                            *ENDDO 
+
+                            KDELE,tn+elemcount+1
+
+                            *DO, i, tn+1, tn+elemcount-1,1
+                                LSTR, i, i+1
+                            *ENDDO 
+
+                            LSTR, tn+elemcount,tn+1
+
+                            *DO, i, 1, elemcount
+                                LESIZE,i, , ,1, , , , ,1
+                            *ENDDO
+
+                            *DO, i, elemcount+1, 2*elemcount
+                                LESIZE,i, , ,1, , , , ,1
+                            *ENDDO
+
+                            AL,ALL
+                            AMESH,1
+
+                            LOCAL,112,1,b,0,0, , , ,1,1,
+
+                            CSYS,0
+
+                            N,9999,b,0,0
+                            TYPE,2
+                            E,9999  
+                            D,9999,ALL,0
+
+                            *GET, nNodes, NODE, 0, COUNT  
+
+                            /PNUM,ELEM,0
+                            /REPLOT 
+
+
+                            *DO,i,1,elemcount,1
+
+                                dist = SQRT((NX(i)-b)**2 + NY(i)**2)
+                                weights(i) = 1/dist
+                                CE,100,1,9999,UY,1,i+elemcount,UY,-weights(i), 9999,UX,1, 
+
+                            *ENDDO
+
+                            ! 5. Граничные условия (ВАЖНО!)
+                            
+                            *DO, i, 1, elemcount,1
+                                SFL,i,PRES,pr
+                            *ENDDO
+
+                            CSYS,0 
+
+                            FINISH  
+                            /SOL
+                            SOLVE
+                            /Post1
+                            RSYS,112                        
+
+                            !результаты (время, максимальное напряжение в узле, координата узла, минимальная толщина в узле)
+                                
+                            !массивы для расчета напряжений
+                            *VSCFUN, DEPmaxstress, MAX, lowcxstress(1,3)
+                            *VSCFUN, DEPmaxstressouter, MAX, highcxstress(1,3)
+
+                            !max напряжения на внутренней поверхности
+                            *VSCFUN, locstress, LMAX, lowcxstress(1,3)
+                            Coordofmax = lowcxstress(locstress,2)*180/Pi
+
+                            !max напряжения на внешней поверхности
+                            *VSCFUN, locstressouter, LMAX, highcxstress(1,3)
+                            Coordofmaxouter = highcxstress(locstressouter,2)*180/Pi   
+
+                            !расчет толщины
+                            *VSCFUN, DEPminthick, MIN, thickness(1,3)
+                            *VSCFUN, locminthick, LMIN, thickness(1,3)
+                            Coordofminthick = thickness(locminthick,2)
+                            *VSCFUN, DEPmaxthick, MAX, thickness(1,3)
+                            halfof=(DEPmaxstress-initialstress)/(smax-initialstress)
+
+                           
+                            *use, ansuitmp15
+                            
+                
+                        *ENDIF
+                        !*IF, DEPminthick,LT,h2,OR,DEPmaxstress,GT,smax,EXIT
+                        *IF, DEPmaxstress,GT,smax,EXIT
+                        *ENDIF
+
+
+                    *ENDDO
+                    EPLOT   
+                    /REPLOT
+
+            *ENDDO
+
+        *ENDDO

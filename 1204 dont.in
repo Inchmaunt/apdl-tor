@@ -1,0 +1,137 @@
+/PREP7  
+ 
+ET,1,PLANE182   
+
+KEYOPT,1,1,0
+KEYOPT,1,3,1
+KEYOPT,1,6,0
+
+ET,2,MASS21         ! Точечная масса для Remote Point
+KEYOPT,2,3,2        ! 2D вариант с 3 DOF (UX,UY,ROTZ)
+R,1,0,  
+
+!*  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,EX,1,,2e5   
+MPDATA,PRXY,1,,0.3  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,DENS,1,,7.85e-6
+
+!LOCAL,11,1,10,0,0, , , ,1,1,
+!==================================================перечитать задачу==============================
+/PREP7
+
+CSYS,0 
+!дано
+h=1.8 !толщина
+
+R2=50 !наружный радиус сечерия тора
+
+r1=R2-h !внутренний радиус сечерия тора
+
+b=10*R2 !радиус окружности тора
+
+pr=4.4554 !давление
+
+elemcount=480 !число разбиений сетки
+
+Pi=ACOS(-1)  !число пи
+
+tn = 1000 !техническое число
+
+
+!массивы для задачи
+*DIM, lowcXcyl, array, elemcount+1, 3
+*DIM, lowcxstress, array, elemcount+1, 1
+*DIM, highcXcyl, array, elemcount+1, 3
+*DIM, lowcxcorrosion, array, elemcount+1, 3
+
+*DO, i, 0, elemcount,1
+lowcXcyl(i+1,1,1) = Pi/elemcount*i
+lowcXcyl(i+1,2,1) = b+(R2-h)*COS(2*Pi/elemcount*i)
+lowcXcyl(i+1,3,1) = (R2-h)*SIN(2*Pi/elemcount*i)
+K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+*ENDDO 
+KDELE,elemcount+1
+*DO, i, 1, elemcount-1,1
+LSTR, i, i+1
+*ENDDO 
+LSTR, elemcount,1
+
+*DO, i, 0, elemcount,1
+highcXcyl(i+1,1,1) = Pi/elemcount*i
+highcXcyl(i+1,2,1) = b+R2*COS(2*Pi/elemcount*i)
+highcXcyl(i+1,3,1) = R2*SIN(2*Pi/elemcount*i)
+K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+*ENDDO 
+KDELE,tn+elemcount+1
+
+*DO, i, tn+1, tn+elemcount-1,1
+    LSTR, i, i+1
+*ENDDO 
+
+LSTR, tn+elemcount,tn+1
+
+*DO, i, 1, elemcount
+    LESIZE,i, , ,1, , , , ,1
+*ENDDO
+
+*DO, i, elemcount+1, 2*elemcount
+    LESIZE,i, , ,1, , , , ,1
+*ENDDO
+
+AL,ALL
+AMESH,1
+
+LOCAL,112,1,b,0,0, , , ,1,1,
+
+CSYS,0
+
+N,9999,b,0,0
+TYPE,2
+E,9999  
+D,9999,ALL,0
+
+!LSEL, S, LINE,,1,elemcount
+!NSLL, S, 1
+*GET, nNodes, NODE, 0, COUNT  
+*DIM, weights, ARRAY, elemcount  
+*DIM, intnodes, ARRAY, elemcount  
+! *DO,i,2,elemcount,1
+! LSEL, S, LINE,,1,5
+! NSLL, S, 1
+!     *GET,tt,NODE,0,NUM,MAX,
+! *ENDDO
+
+/PNUM,ELEM,0
+/REPLOT 
+!LSEL, S, LINE,,1,elemcount
+!NSLL, S, 1
+! Задаем весовые коэффициенты (например, по расстоянию)  
+
+
+*DO,i,1,elemcount,1
+
+    dist = SQRT((NX(i)-b)**2 + NY(i)**2)
+    weights(i) = 1/dist
+    CE,100,1,9999,UY,1,i+elemcount,UY,-weights(i), 9999,UX,1, 
+
+*ENDDO
+
+! =============================================
+! 5. Граничные условия (ВАЖНО!)
+! =============================================
+
+*DO, i, 1, elemcount,1
+    SFL,i,PRES,pr
+*ENDDO
+
+CSYS,0 
+
+FINISH  
+/SOL
+SOLVE
+/Post1
+RSYS,112

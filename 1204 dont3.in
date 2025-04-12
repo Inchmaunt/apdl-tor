@@ -1,0 +1,193 @@
+/PREP7  
+ 
+ET,1,PLANE182   
+
+KEYOPT,1,1,0
+KEYOPT,1,3,1
+KEYOPT,1,6,0
+
+ET,8,MPC184 
+!*  
+KEYOPT,8,1,16   
+KEYOPT,8,4,0
+
+
+!*  
+!*  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,EX,1,,2e5   
+MPDATA,PRXY,1,,0.3  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,DENS,1,,7.8e-6
+
+!LOCAL,11,1,10,0,0, , , ,1,1,
+!==================================================перечитать задачу==============================
+/PREP7
+
+CSYS,0 
+!дано
+h=1.8 !толщина
+
+R2=50 !наружный радиус сечерия тора
+
+r1=R2-h !внутренний радиус сечерия тора
+
+b=10*R2 !радиус окружности тора
+
+pr=4.4554 !давление
+
+elemcount=60 !число разбиений сетки
+
+Pi=ACOS(-1)  !число пи
+
+tn = 1000 !техническое число
+
+
+!массивы для задачи
+*DIM, lowcXcyl, array, elemcount+1, 3
+*DIM, lowcxstress, array, elemcount+1, 1
+*DIM, highcXcyl, array, elemcount+1, 3
+*DIM, lowcxcorrosion, array, elemcount+1, 3
+
+*DO, i, 0, elemcount,1
+lowcXcyl(i+1,1,1) = Pi/elemcount*i
+lowcXcyl(i+1,2,1) = b+(R2-h)*COS(2*Pi/elemcount*i)
+lowcXcyl(i+1,3,1) = (R2-h)*SIN(2*Pi/elemcount*i)
+K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+*ENDDO 
+KDELE,elemcount+1
+*DO, i, 1, elemcount-1,1
+LSTR, i, i+1
+*ENDDO 
+LSTR, elemcount,1
+
+*DO, i, 0, elemcount,1
+highcXcyl(i+1,1,1) = Pi/elemcount*i
+highcXcyl(i+1,2,1) = b+R2*COS(2*Pi/elemcount*i)
+highcXcyl(i+1,3,1) = R2*SIN(2*Pi/elemcount*i)
+K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+*ENDDO 
+KDELE,tn+elemcount+1
+*DO, i, tn+1, tn+elemcount-1,1
+LSTR, i, i+1
+*ENDDO 
+LSTR, tn+elemcount,tn+1
+
+!K,9999,b,0,0
+!LSTR, 1, 1+tn
+!LSTR, elemcount+1, elemcount+1+tn
+
+
+LESIZE,ALL, , ,1, , , , ,1 
+AL,ALL
+AMESH,1
+N,1000,b,0,0
+!N, 9999, b, 0, 0, , , 
+
+!LOCAL,112,1,b,0,0, , , ,1,1,
+
+!NROTAT,ALL
+!LSCLEAR,ALL 
+
+
+! Создаем ведущую точку (Remote Point)  
+!K,9999,0,0,0
+!CSYS,0
+! =============================================
+! 3. Создание и связывание Remote Point
+! =============================================
+! Создаем Remote Point и ВКЛЮЧАЕМ его в модель
+!N,1000,b,0,0
+! Создаем "фиктивный" элемент
+
+
+
+! Выбираем ведомые узлы поверхности
+! NSEL, S,NODE,, 9999  
+LSEL, S, LINE,,1,elemcount
+NSLL, S, 1
+
+*GET,nNodes,NODE,0,COUNT
+
+*GET,nFirst,NODE,0,NUM,MIN
+n = nFirst
+total_weight = 0
+
+*DIM,weights,ARRAY,nNodes
+*DO,i,1,nNodes,1
+    dx = NX(n) - b
+    dy = NY(n)
+    dist = SQRT(dx**2 + dy**2)
+    weights(i) = 1/(dist+1e-6)  ! +1e-6 чтобы избежать деления на 0
+    total_weight = total_weight + weights(i)
+    n = NDNEXT(n)
+*ENDDO
+
+N,1000,b,0,0
+LSEL, S, LINE,,1,elemcount
+NSLL, S, 1
+
+R,10,weights(i)       ! Записываем вес в параметры материала
+TYPE,   8   
+MAT,       1
+REAL,   10
+ESYS,       0   
+SECNUM, 
+*DO,i,1,elemcount,1
+!R,10,weights(i)  
+E,1000,i  
+*ENDDO
+! =============================================
+! 4. Корректное создание CE-связей
+! =============================================
+/PNUM,ELEM,0
+/REPLOT 
+
+! Задаем весовые коэффициенты (например, по расстоянию)  
+*GET, nNodes, NODE, 0, COUNT  
+*DIM, weights, ARRAY, nNodes  
+
+! Сначала создаем уравнение с первым узлом
+*GET,n_first,NODE,0,NUM,MIN
+dist = SQRT((NX(n_first)-b)**2 + NY(n_first)**2)
+weight_first = 1/dist
+
+CE,100,HIGH,1000,UY,1.0,n_first,UY,-weight_first
+
+!CE,100,0,1000,UY,1.0,61,UY,1
+
+! Добавляем остальные узлы
+n = NDNEXT(n_first)
+*DO,i,1,nNodes
+    dist = SQRT((NX(i)-b)**2 + NY(i)**2)
+    weights(i) = 1/dist
+    CE,100,0,n,UY,-weights(i)
+    !CE,100,0,1000,UY,-weights(i)
+    n = NDNEXT(n)
+*ENDDO
+
+! =============================================
+! 5. Граничные условия (ВАЖНО!)
+! =============================================
+! Закрепляем ТОЛЬКО необходимые степени свободы
+D,1000,ALL,0        ! Фиксация радиального смещения
+
+ !DL,elemcount*2+1,1, UY, ,  
+! Давление на внутреннюю поверхность
+*DO, i, 1, elemcount,1
+    SFL,i,PRES,pr
+*ENDDO
+ALLSEL
+
+! =============================================
+! 6. Решение
+! =============================================
+ALLSEL,ALL
+/SOLU
+SOLVE
+FINISH
+
+/POST1
+PLNSOL,U,Y         ! Визуализация перемещений

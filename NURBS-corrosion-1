@@ -132,7 +132,7 @@ CSYS,0
 	*DO, i, 0, elemcount,1
 		highcXcyl(i+1,1,1) = Pi/elemcount*i
 		highcXcyl(i+1,2,1) = R2+R2*COS(Pi-Pi/elemcount*i)
-		highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
+		highcXcyl(i+1,3,1) = R2*SIN(Pi/elemcount*i)
 	K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
 	*ENDDO 
 
@@ -437,6 +437,7 @@ CSYS,0
 				ADELE, ALL
 				LDELE,All
 				KDELE,All
+				CSDELE,117
 				CSYS,0 
 				
 				!========================== Второе построение геометрии при помощи NURBS =======================
@@ -944,6 +945,7 @@ CSYS,0
 							ADELE, ALL
 							LDELE,All
 							KDELE,All
+							CSDELE,117
 							CSYS,0 
 
 
@@ -969,8 +971,10 @@ CSYS,0
 								NROTAT,ALL
 								LSCLEAR,ALL 
 
+								
+								CSYS,0 
 								!для внутренней поверхности
-								LOCAL,117,0,b-r1,0,0, , , ,1,1,
+								LOCAL,117,0,b-r1-((r1)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(Pi),0,0, , , ,1,1,
 								NROTAT,ALL
 								LSCLEAR,ALL 
 								!для внешней поверхности
@@ -978,31 +982,6 @@ CSYS,0
 								NROTAT,ALL
 								LSCLEAR,ALL 
 
-								! CSYS,117
-								! !RSYS,117
-								! *DO, i, 0, elemcount,1
-								! lowcXcyl(i+1,1,1) = Pi/elemcount*i
-								! lowcXcyl(i+1,2,1) = r1+(r1)*COS(Pi-Pi/elemcount*i)
-								! lowcXcyl(i+1,3,1) = (r1)*SIN(Pi/elemcount*i)
-								! K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
-								! *ENDDO
-
-								! CSYS,119 
-								! !RSYS,119
-								! *DO, i, 0, elemcount,1
-								! 	highcXcyl(i+1,1,1) = Pi/elemcount*i
-								! 	highcXcyl(i+1,2,1) = R2+R2*COS(Pi-Pi/elemcount*i)
-								! 	highcXcyl(i+1,3,1) = R2*SIN( Pi/elemcount*i)
-								! K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
-								! *ENDDO 
-
-								! CSYS,0
-								! !RSYS,0
-								! *DO, i, 0, elemcount, 1
-								! 	thickness(i+1,1,1) = Pi/elemcount*i
-								! 	thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
-								! 	thickness(i+1,3,1) = ((highcXcyl(i+1,2,1)-lowcXcyl(i+1,2,1))**2 + (highcXcyl(i+1,3,1)-lowcXcyl(i+1,3,1))**2)**0.5
-								! *ENDDO
 
 							!
 							!========================================= УЗЛОВОЙ ВЕКТОР ==================================================================
