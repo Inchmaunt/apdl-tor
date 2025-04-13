@@ -30,7 +30,7 @@ CSYS,0
 *CREATE,ansuitmp15
 *CFOPEN, 'D:\doubleside', txt,,append
 *VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,kk,halfof,iniload,mi, , , ,, , , ,
-(10f10.4)
+(10f10.3)
 *CFCLOS
 *END
 
@@ -91,13 +91,13 @@ CSYS,0
     !==================массивы для задачи==================
 
     *DIM, lowcXcyl, array, elemcount+1, 3
-    *DIM, lowcxstress, array, elemcount+1, 3
+    !*DIM, lowcxstress, array, elemcount+1, 3
     *DIM, highcXcyl, array, elemcount+1, 3
-    *DIM, highcxstress, array, elemcount+1, 3
+    !*DIM, highcxstress, array, elemcount+1, 3
     *DIM, lowcxcorrosion, array, elemcount+1, 3
     *DIM, highcxcorrosion, array, elemcount+1, 3
     *DIM, thickness, array, elemcount+1, 3
-    *DIM, testset, array, elemcount+1,4
+    *DIM, testset, array, elemcount,6
 
 
 !==========================================================================================================
@@ -163,7 +163,7 @@ CSYS,0
     *GET,lownodemin,NODE,0,NUM,MIN
     *GET,lownodemax,NODE,0,NUM,MAX
     *GET, lowNodes, NODE, 0, COUNT 
-    *DIM, weights, ARRAY, lowNodes  
+    *DIM, weights, ARRAY, lowNodes 
     ! *DIM, lownodeset, ARRAY, lowNodes,1
 
     *DO,i,lownodemin,lownodemax,1
@@ -200,7 +200,7 @@ CSYS,0
 
     KSEL, S, KP,,1,elemcount+1
     NSLK,S
-    *GET, nodelow, NODE,0, COUNT
+    *GET, nodelow, NODE,0, COUNT ! число узлов
     Selnode=0
 
     *Do,i,1,nodelow
@@ -208,6 +208,7 @@ CSYS,0
         testset(i,1,1)= NodeNo
         *GET,testset(i,2,1),NODE,testset(i,1,1),S,Y
         SelNode=NodeNo
+        testset(i,5,1)=2*Pi/elemcount*i
     *Enddo
 
     KSEL,ALL
@@ -222,50 +223,31 @@ CSYS,0
         testset(i,3,1)= NodeNo
         *GET,testset(i,4,1),NODE,testset(i,3,1),S,Y
         SelNode=NodeNo
+        testset(i,6,1)=2*Pi/elemcount*i
     *ENDDO
 
-    *DO, i, 1, elemcount,1
-        *GET, lowcxstress(i,1,1), NODE, elemcount+i, S,Y
-        lowcxstress(i,2,1) = 2*Pi/elemcount*i
-        
-        *IF, lowcxstress(i,1,1), LT, 0, THEN
-            lowcxstress(i,3,1)=-lowcxstress(i,1,1)
-            *ELSE
-            lowcxstress(i,3,1)=lowcxstress(i,1,1)
-        *ENDIF
-    *ENDDO
-
-
-    *DO, i, 0, elemcount,1
-        *GET, highcxstress(i+1,1,1), NODE, i+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
-        highcxstress(i+1,2,1) = 2*Pi/elemcount*i
-
-        *IF, highcxstress(i+1,1,1), LT, 0, THEN
-            highcxstress(i+1,3,1)=-highcxstress(i+1,1,1)
-            *ELSE
-            highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
-        *ENDIF
-    *ENDDO
+    KSEL,ALL
+ 
 
     !вычисляем новую геометрию по коррозии
-    *DO, i, 0, elemcount, 1
-        lowcxcorrosion(i+1,1,1) = 2*Pi/elemcount*i
-        lowcxcorrosion(i+1,2,1) = b+((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(2*Pi/elemcount*i)
-        lowcxcorrosion(i+1,3,1) = ((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*SIN(2*Pi/elemcount*i)
+    *DO, i, 1, nodelow, 1
+        lowcxcorrosion(i,1,1) = 2*Pi/elemcount*i
+        lowcxcorrosion(i,2,1) = b+((R2-h)+(ai+(testset(i,2,1))*mi)*t1)*COS(2*Pi/elemcount*i)
+        lowcxcorrosion(i,3,1) = ((R2-h)+(ai+(testset(i,2,1))*mi)*t1)*SIN(2*Pi/elemcount*i) 
     *ENDDO
 
 
-    *DO, i, 0, elemcount, 1
-        highcxcorrosion(i+1,1,1) = 2*Pi/elemcount*i
-        highcxcorrosion(i+1,2,1) = b+(R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*COS(2*Pi/elemcount*i)
-        highcxcorrosion(i+1,3,1) = (R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*SIN(2*Pi/elemcount*i)
+    *DO, i, 1, nodehigh, 1
+        highcxcorrosion(i,1,1) = 2*Pi/elemcount*i
+        highcxcorrosion(i,2,1) = b+(R2-(ao+(testset(i,4,1))*mo)*t1)*COS(2*Pi/elemcount*i)
+        highcxcorrosion(i,3,1) = (R2-(ao+(testset(i,4,1))*mo)*t1)*SIN(2*Pi/elemcount*i)
     *ENDDO
 
 
-    *DO, i, 0, elemcount, 1
-        thickness(i+1,1,1) = 2*Pi/elemcount*i
-        thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
-        thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
+    *DO, i, 1, nodelow, 1
+        thickness(i,1,1) = 2*Pi/elemcount*i
+        thickness(i,2,1) = thickness(i,1,1)/Pi*180
+        thickness(i,3,1) = ((highcxcorrosion(i,2,1)-lowcxcorrosion(i,2,1))**2 + (highcxcorrosion(i,3,1)-lowcxcorrosion(i,3,1))**2)**0.5
     *ENDDO
 
 
@@ -300,7 +282,7 @@ CSYS,0
                         *ELSE
 
                             *IF, t1, EQ, 0, THEN
-                                *VSCFUN, initialstress, MAX, lowcxstress(1,1)
+                                *VSCFUN, initialstress, MAX, testset(1,2)
                                 RSYS,112
                                 CSYS,112
                                 /Post1
@@ -361,51 +343,66 @@ CSYS,0
                                     !END OF SCREENSHOT
                                 *ENDIF
                             *ENDDO
+
+
+
+
+
+
                             !Добавить выборку узлов для цикла - AI STOP
-                            *DO, i, 1, elemcount,1
-                                *GET, lowcxstress(i,1,1), NODE, elemcount+i, S,Y
-                                lowcxstress(i,2,1) = 2*Pi/elemcount*i
-                                
-                                *IF, lowcxstress(i,1,1), LT, 0, THEN
-                                    lowcxstress(i,3,1)=-lowcxstress(i,1,1)
-                                    *ELSE
-                                    lowcxstress(i,3,1)=lowcxstress(i,1,1)
-                                *ENDIF
+                            KSEL, S, KP,,1,elemcount+1
+                            NSLK,S
+                            *GET, nodelow, NODE,0, COUNT ! число узлов
+                            Selnode=0
+
+                            *Do,i,1,nodelow
+                                NodeNo=NDNEXT(SelNode) !NDNEXT(N) Next selected node having a node number greater than N.
+                                testset(i,1,1)= NodeNo
+                                *GET,testset(i,2,1),NODE,testset(i,1,1),S,Y
+                                SelNode=NodeNo
+                                testset(i,5,1)=2*Pi/elemcount*i
+                            *Enddo
+
+                            KSEL,ALL
+
+                            KSEL, S, KP,,tn+1,tn+elemcount+1
+                            NSLK,S
+                            *GET, nodehigh, NODE,0, COUNT
+                            Selnode=0
+
+                            *Do,i,1,nodehigh
+                                NodeNo=NDNEXT(SelNode) !NDNEXT(N) Next selected node having a node number greater than N.
+                                testset(i,3,1)= NodeNo
+                                *GET,testset(i,4,1),NODE,testset(i,3,1),S,Y
+                                SelNode=NodeNo
+                                testset(i,6,1)=2*Pi/elemcount*i
                             *ENDDO
 
-                            *DO, i, 0, elemcount,1
-                                *GET, highcxstress(i+1,1,1), NODE, i+1, S,Y !+1 второй раз, чтобы перейти к узлам внешней поверхности 
-                                highcxstress(i+1,2,1) = 2*Pi/elemcount*i
-
-                                *IF, highcxstress(i+1,1,1), LT, 0, THEN
-                                    highcxstress(i+1,3,1)=-highcxstress(i+1,1,1)
-                                    *ELSE
-                                    highcxstress(i+1,3,1)=highcxstress(i+1,1,1)
-                                *ENDIF
-                            *ENDDO
+                            KSEL,ALL
+ 
 
                             !вычисляем новую геометрию по коррозии
-                            *DO, i, 0, elemcount, 1
-                                lowcxcorrosion(i+1,1,1) = 2*Pi/elemcount*i
-                                lowcxcorrosion(i+1,2,1) = b+((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*COS(2*Pi/elemcount*i)
-                                lowcxcorrosion(i+1,3,1) = ((R2-h)+(ai+(lowcxstress(i+1,3,1))*mi)*t1)*SIN(2*Pi/elemcount*i)
+                            *DO, i, 1, nodelow, 1
+                                lowcxcorrosion(i,1,1) = 2*Pi/elemcount*i
+                                lowcxcorrosion(i,2,1) = b+((R2-h)+(ai+(testset(i,2,1))*mi)*t1)*COS(2*Pi/elemcount*i)
+                                lowcxcorrosion(i,3,1) = ((R2-h)+(ai+(testset(i,2,1))*mi)*t1)*SIN(2*Pi/elemcount*i) 
                             *ENDDO
 
 
-                            *DO, i, 0, elemcount, 1
-                                highcxcorrosion(i+1,1,1) = 2*Pi/elemcount*i
-                                highcxcorrosion(i+1,2,1) = b+(R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*COS(2*Pi/elemcount*i)
-                                highcxcorrosion(i+1,3,1) = (R2-(ao+(highcxstress(i+1,3,1))*mo)*t1)*SIN(2*Pi/elemcount*i)
+                            *DO, i, 1, nodehigh, 1
+                                highcxcorrosion(i,1,1) = 2*Pi/elemcount*i
+                                highcxcorrosion(i,2,1) = b+(R2-(ao+(testset(i,4,1))*mo)*t1)*COS(2*Pi/elemcount*i)
+                                highcxcorrosion(i,3,1) = (R2-(ao+(testset(i,4,1))*mo)*t1)*SIN(2*Pi/elemcount*i)
                             *ENDDO
 
 
-                            *DO, i, 0, elemcount, 1
-                                thickness(i+1,1,1) = 2*Pi/elemcount*i
-                                thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
-                                thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
+                            *DO, i, 1, nodelow, 1
+                                thickness(i,1,1) = 2*Pi/elemcount*i
+                                thickness(i,2,1) = thickness(i,1,1)/Pi*180
+                                thickness(i,3,1) = ((highcxcorrosion(i,2,1)-lowcxcorrosion(i,2,1))**2 + (highcxcorrosion(i,3,1)-lowcxcorrosion(i,3,1))**2)**0.5
                             *ENDDO
-
                             !удаляем старое и перестраиваем
+
                             ALLSEL  
                             /PREP7
                             CEDELE,ALL
@@ -499,16 +496,16 @@ CSYS,0
                             !результаты (время, максимальное напряжение в узле, координата узла, минимальная толщина в узле)
                                 
                             !массивы для расчета напряжений
-                            *VSCFUN, DEPmaxstress, MAX, lowcxstress(1,3)
-                            *VSCFUN, DEPmaxstressouter, MAX, highcxstress(1,3)
+                            *VSCFUN, DEPmaxstress, MAX, testset(1,2)
+                            *VSCFUN, DEPmaxstressouter, MAX, testset(1,4)
 
                             !max напряжения на внутренней поверхности
-                            *VSCFUN, locstress, LMAX, lowcxstress(1,3)
-                            Coordofmax = lowcxstress(locstress,2)*180/Pi
+                            *VSCFUN, locstress, LMAX, testset(1,2)
+                            Coordofmax = testset(locstress,5)*180/Pi
 
                             !max напряжения на внешней поверхности
-                            *VSCFUN, locstressouter, LMAX, highcxstress(1,3)
-                            Coordofmaxouter = highcxstress(locstressouter,2)*180/Pi   
+                            *VSCFUN, locstressouter, LMAX, testset(1,4)
+                            Coordofmaxouter = testset(locstressouter,6)*180/Pi   
 
                             !расчет толщины
                             *VSCFUN, DEPminthick, MIN, thickness(1,3)
@@ -524,7 +521,7 @@ CSYS,0
                         *ENDIF
                         !*IF, DEPminthick,LT,h2,OR,DEPmaxstress,GT,smax,EXIT
                         *IF, DEPmaxstress,GT,smax,EXIT
-                        *ENDIF
+                        !*ENDIF
 
 
                     *ENDDO
