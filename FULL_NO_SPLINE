@@ -10,6 +10,15 @@ ET,2,MASS21         ! Точечная масса для Remote Point
 KEYOPT,2,3,2        ! 2D вариант с 3 DOF (UX,UY,ROTZ)
 R,1,0,  
 
+
+ET,3,PLANE183   
+  
+ 
+KEYOPT,3,1,0
+KEYOPT,3,3,1
+KEYOPT,3,6,0
+
+
 !*  
 MPTEMP,,,,,,,,  
 MPTEMP,1,0  
@@ -61,13 +70,13 @@ CSYS,0
     !pr=1
     po=1e-6
 
-    elemcount=240 !число разбиений сетки
+    elemcount=540 !число разбиений сетки
 
     Pi=ACOS(-1)  !число пи
 
     tn = 1000 !техническое число
 
-    k=0.5 ! В статье принята обратная величина, то есть расчет ведется для 1/k
+    k=1 ! В статье принята обратная величина, то есть расчет ведется для 1/k
 
     t1=0 !начальный момент времени
 
@@ -80,7 +89,7 @@ CSYS,0
     !mo=0
     mo=ao/(k*smax)
 
-    timesize=0.1 !шаг по времени в задаче
+    timesize=0.01 !шаг по времени в задаче
 
     linesize=20    !число разбиений на плоскостях симметрии
     meshsize=1    !размер элементов сетки
@@ -90,25 +99,25 @@ CSYS,0
 
     !==================массивы для задачи==================
 
-    *DIM, lowcXcyl, array, elemcount+1, 3
+    *DIM, lowcXcyl, array, elemcount, 3
     !*DIM, lowcxstress, array, elemcount+1, 3
-    *DIM, highcXcyl, array, elemcount+1, 3
+    *DIM, highcXcyl, array, elemcount, 3
     !*DIM, highcxstress, array, elemcount+1, 3
-    *DIM, lowcxcorrosion, array, elemcount+1, 3
-    *DIM, highcxcorrosion, array, elemcount+1, 3
-    *DIM, thickness, array, elemcount+1, 3
+    *DIM, lowcxcorrosion, array, elemcount, 3
+    *DIM, highcxcorrosion, array, elemcount, 3
+    *DIM, thickness, array, elemcount, 3
     *DIM, testset, array, elemcount,6
 
 
 !==========================================================================================================
 !========================== ПЕРВОЕ ПОСТРОЕНИЕ ГЕОМЕТРИИ И РЕШЕНИЕ =========================================
-    *DO, i, 0, elemcount,1
-        lowcXcyl(i+1,1,1) = Pi/elemcount*i
-        lowcXcyl(i+1,2,1) = b+(R2-h)*COS(2*Pi/elemcount*i)
-        lowcXcyl(i+1,3,1) = (R2-h)*SIN(2*Pi/elemcount*i)
-        K,i+1,lowcXcyl(i+1,2,1),lowcXcyl(i+1,3,1),0,
+    *DO, i, 1, elemcount,1
+        lowcXcyl(i,1,1) = Pi/elemcount*i
+        lowcXcyl(i,2,1) = b+(R2-h)*COS(2*Pi/elemcount*i)
+        lowcXcyl(i,3,1) = (R2-h)*SIN(2*Pi/elemcount*i)
+        K,i,lowcXcyl(i,2,1),lowcXcyl(i,3,1),0,
     *ENDDO 
-    KDELE,elemcount+1
+    !KDELE,elemcount+1
 
     *DO, i, 1, elemcount-1,1
         LSTR, i, i+1
@@ -116,14 +125,14 @@ CSYS,0
 
     LSTR, elemcount,1
 
-    *DO, i, 0, elemcount,1
-        highcXcyl(i+1,1,1) = Pi/elemcount*i
-        highcXcyl(i+1,2,1) = b+R2*COS(2*Pi/elemcount*i)
-        highcXcyl(i+1,3,1) = R2*SIN(2*Pi/elemcount*i)
-        K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+    *DO, i, 1, elemcount,1
+        highcXcyl(i,1,1) = Pi/elemcount*i
+        highcXcyl(i,2,1) = b+R2*COS(2*Pi/elemcount*i)
+        highcXcyl(i,3,1) = R2*SIN(2*Pi/elemcount*i)
+        K,i+tn,highcXcyl(i,2,1),highcXcyl(i,3,1),0,
     *ENDDO 
 
-    KDELE,tn+elemcount+1
+    !KDELE,tn+elemcount+1
 
     *DO, i, tn+1, tn+elemcount-1,1
         LSTR, i, i+1
@@ -138,7 +147,7 @@ CSYS,0
     *DO, i, elemcount+1, 2*elemcount
         LESIZE,i, , ,1, , , , ,1
     *ENDDO
-
+    MSHKEY, 2
     AL,ALL
     AMESH,1
 
@@ -146,10 +155,10 @@ CSYS,0
 
     CSYS,0
 
-    N,9999,b,0,0
+    N,99999999,b,0,0
     TYPE,2
-    E,9999  
-    D,9999,ALL,0
+    E,99999999  
+    D,99999999,ALL,0
 
     ! *GET, nNodes, NODE, 0, COUNT  
 
@@ -169,7 +178,7 @@ CSYS,0
     *DO,i,lownodemin,lownodemax,1
         dist = SQRT((NX(i)-b)**2 + NY(i)**2)
         weights(i-lownodemin+1) = 1/dist
-        CE,100,1,9999,UY,1,i,UY,-weights(i-lownodemin+1), 9999,UX,1, 
+        CE,100,1,99999999,UY,1,i,UY,-weights(i-lownodemin+1), 99999999,UX,1, 
     *ENDDO
 
    NSEL,ALL
@@ -255,11 +264,11 @@ CSYS,0
 !==================================================== ЦИКЛ ================================================
 
     !====================================== ЦИКЛ ПО НАЧАЛЬНОЙ НАГРУЗКЕ ====================================
-        *DO, iniload, 0.25,0.5, 0.25
+        *DO, iniload, 0.50,0.50, 0.25
 
             pr=(2*h*smax*iniload)/rc1*(b-rc1)/(2*b-rc1)  !давление
         !====================================== ЦИКЛ ПО K =================================================
-            *DO, kk, 4, 4, 3
+            *DO, kk, 1, 1, 3
 
                 ai=0.05
                     !ai=0
@@ -271,7 +280,7 @@ CSYS,0
                     mo=0
                     !mo=ao/(kk*smax)   
             !====================================== ВРЕМЕННОЙ ЦИКЛ ========================================
-                    *DO, t1, 0, 50, timesize
+                    *DO, t1, 0, 100, timesize
                         /POST1
                         RSYS,112
                         CSYS,112
@@ -414,10 +423,11 @@ CSYS,0
                             
                             CSYS,0 
 
-                            *DO, i, 0, elemcount,1
-                                K,i+1,lowcxcorrosion(i+1,2,1),lowcxcorrosion(i+1,3,1),0,
+
+                            *DO, i, 1, elemcount,1
+                                K,i,lowcxcorrosion(i,2,1),lowcxcorrosion(i,3,1),0,
                             *ENDDO 
-                            KDELE,elemcount+1
+                            
 
                             *DO, i, 1, elemcount-1,1
                                 LSTR, i, i+1
@@ -425,11 +435,11 @@ CSYS,0
 
                             LSTR, elemcount,1
 
-                            *DO, i, 0, elemcount,1
-                                K,i+1+tn,highcxcorrosion(i+1,2,1),highcxcorrosion(i+1,3,1),0,
+                            *DO, i, 1, elemcount,1
+                                K,i+tn,highcxcorrosion(i,2,1),highcxcorrosion(i,3,1),0,
                             *ENDDO 
 
-                            KDELE,tn+elemcount+1
+                            !KDELE,tn+elemcount+1
 
                             *DO, i, tn+1, tn+elemcount-1,1
                                 LSTR, i, i+1
@@ -452,10 +462,10 @@ CSYS,0
 
                             CSYS,0
 
-                            N,9999,b,0,0
+                            N,99999999,b,0,0
                             TYPE,2
-                            E,9999  
-                            D,9999,ALL,0
+                            E,99999999  
+                            D,99999999,ALL,0
 
                             *GET, nNodes, NODE, 0, COUNT  
 
@@ -472,7 +482,7 @@ CSYS,0
                             *DO,i,lownodemin,lownodemax,1
                                 dist = SQRT((NX(i)-b)**2 + NY(i)**2)
                                 weights(i-lownodemin+1) = 1/dist
-                                CE,100,1,9999,UY,1,i,UY,-weights(i-lownodemin+1), 9999,UX,1, 
+                                CE,100,1,99999999,UY,1,i,UY,-weights(i-lownodemin+1), 99999999,UX,1, 
                             *ENDDO
 
                             NSEL,ALL
