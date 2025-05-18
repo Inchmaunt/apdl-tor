@@ -1,0 +1,42 @@
+{
+  "486b68af": {
+    "comment": "выфавыафыв",
+    "filename": "corrosion_486b68af_k1.000_b1-5_R10ro_exhaust25percent_mesh90_03_05_2025.txt",
+    "date": "03.05.2025 17:10",
+    "mesh": 90,
+    "k": "1.000",
+    "thickness": "1/5",
+    "radius": "10ro",
+    "exhaustion": "25%"
+  },
+  "9e684c80": {
+    "comment": "кеевкпвапва",
+    "filename": "corrosion_9e684c80_k1.000_b1-5_R50ro_exhaust25percent_mesh60_03_05_2025.txt",
+    "date": "03.05.2025 17:12",
+    "mesh": 60,
+    "k": "1.000",
+    "thickness": "1/5",
+    "radius": "50ro",
+    "exhaustion": "25%"
+  },
+  "3756b471": {
+    "comment": "фотка есть в презентации",
+    "filename": "corrosion_3756b471_k1.000_b1-5_R50ro_exhaust25percent_mesh240_03_05_2025.txt",
+    "date": "03.05.2025 21:52",
+    "mesh": 240,
+    "k": "1.000",
+    "thickness": "1/5",
+    "radius": "50ro",
+    "exhaustion": "25%"
+  },
+  "11c4a721": {
+    "comment": "7-точечное первое",
+    "filename": "corrosion_11c4a721_k1.000_b1-5_R50ro_exhaust25percent_mesh240_13_05_2025.txt",
+    "date": "13.05.2025 20:58",
+    "mesh": 240,
+    "k": "1.000",
+    "thickness": "1/5",
+    "radius": "50ro",
+    "exhaustion": "25%"
+  }
+}

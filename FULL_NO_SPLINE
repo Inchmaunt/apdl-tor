@@ -1,3 +1,5 @@
+/GRAPHICS,FULL  
+
 /PREP7  
  
 ET,1,PLANE182   
@@ -70,7 +72,7 @@ CSYS,0
     !pr=1
     po=1e-6
 
-    elemcount=540 !число разбиений сетки
+    elemcount=120 !число разбиений сетки
 
     Pi=ACOS(-1)  !число пи
 
@@ -89,7 +91,7 @@ CSYS,0
     !mo=0
     mo=ao/(k*smax)
 
-    timesize=0.01 !шаг по времени в задаче
+    timesize=0.05 !шаг по времени в задаче
 
     linesize=20    !число разбиений на плоскостях симметрии
     meshsize=1    !размер элементов сетки
@@ -147,7 +149,7 @@ CSYS,0
     *DO, i, elemcount+1, 2*elemcount
         LESIZE,i, , ,1, , , , ,1
     *ENDDO
-    MSHKEY, 2
+    MSHKEY, 1
     AL,ALL
     AMESH,1
 
@@ -165,7 +167,7 @@ CSYS,0
     ! *DIM, intnodes, ARRAY, elemcount  
 
     /PNUM,ELEM,0
-    /REPLOT 
+    !/REPLOT 
 
     LSEL, S, LINE,,1,elemcount
     NSLL, S, 1
@@ -183,16 +185,9 @@ CSYS,0
 
    NSEL,ALL
     /REP,FAST   
-    /REPLOT 
+    !/REPLOT 
 
-    ! *DO,i,1,elemcount,1
 
-    !     dist = SQRT((NX(i)-b)**2 + NY(i)**2)
-    !     weights(i) = 1/dist
-    !     CE,100,1,9999,UY,1,i+elemcount,UY,-weights(i), 9999,UX,1, 
-
-    ! *ENDDO
- 
     ! 5. Граничные условия (ВАЖНО!)
     
     *DO, i, 1, elemcount,1
@@ -321,7 +316,7 @@ CSYS,0
                                 !END OF SCREENSHOT
                             *ENDIF
 
-                            *DO, W, 1, 30, 0.5
+                            *DO, W, 1, 100, 0.2
                                 *IF, t1, EQ, W, THEN
                                     RSYS,112
                                     CSYS,112
@@ -417,9 +412,12 @@ CSYS,0
                             CEDELE,ALL
                             LSCLEAR,ALL 
                             ACLEAR,1
+                            EDELE,ALL
+                            NDELE,ALL
                             ADELE, ALL
                             LDELE,All
                             KDELE,All
+                            
                             
                             CSYS,0 
 
@@ -454,7 +452,9 @@ CSYS,0
                             *DO, i, elemcount+1, 2*elemcount
                                 LESIZE,i, , ,1, , , , ,1
                             *ENDDO
-
+                            
+                            TYPE,1
+                            MSHKEY, 1
                             AL,ALL
                             AMESH,1
 
@@ -470,7 +470,7 @@ CSYS,0
                             *GET, nNodes, NODE, 0, COUNT  
 
                             /PNUM,ELEM,0
-                            /REPLOT 
+                            !/REPLOT 
 
 
                             LSEL, S, LINE,,1,elemcount
@@ -487,7 +487,7 @@ CSYS,0
 
                             NSEL,ALL
                             /REP,FAST   
-                            /REPLOT 
+                            !/REPLOT 
 
                             ! 5. Граничные условия (ВАЖНО!)
                             

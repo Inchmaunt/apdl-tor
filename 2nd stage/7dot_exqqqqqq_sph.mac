@@ -1,0 +1,955 @@
+/PREP7  
+ 
+ET,1,PLANE182   
+
+KEYOPT,1,1,0
+KEYOPT,1,3,1
+KEYOPT,1,6,0
+
+!*  
+!*  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,EX,1,,2e5   
+MPDATA,PRXY,1,,0.3  
+MPTEMP,,,,,,,,  
+MPTEMP,1,0  
+MPDATA,DENS,1,,7.8e-6
+  
+!LOCAL,11,1,10,0,0, , , ,1,1,
+!==================================================перечитать задачу==============================
+/PREP7
+LSCLEAR,ALL 
+ACLEAR,1
+ADELE, ALL
+LDELE,All
+KDELE,All
+CSYS,0 
+
+!==================дано==================
+
+
+R2=50 !наружный радиус сечерия тора
+
+h=R2/5 !толщина
+!h=1.9802
+r1=R2-h !внутренний радиус сечерия тора
+
+b=50*R2 !радиус окружности тора
+
+smax=450 !SMAX для случая с b=2 R1 равно 350, для случая с b-20 R1 равно 408
+
+iniload=0.25 !коэффициент начального нагружения (в долях процента, для процента надо домножить на 100)
+
+rc1=(R2+r1)/2 !срединный радиус поперечного сечения тора
+
+
+pr=(2*h*smax*iniload)/rc1*(b-rc1)/(2*b-rc1) !давление
+po=1e-10
+
+elemcount=240 !число разбиений сетки
+
+Pi=ACOS(-1)  !число пи
+
+tn = 1000 !техническое число
+
+kk=1
+
+t1=0 !начальное время
+
+ai=0.05
+!mi=0
+mi=ai/(kk*smax)
+ao=0
+!ao=0.05
+mo=0
+!mo=ao/(kk*smax)
+
+timesize=0.05 !шаг по времени в задаче
+
+linesize=40    !число разбиений на плоскостях симметрии
+meshsize=1    !размер элементов сетки
+
+
+R = r1          ! Радиус идеальной окружности
+CENTER_X = 0   ! Координаты центра
+CENTER_Y = 0.0
+THRESHOLD_ANGLE = 175  ! Порог для угла (градусы)
+THRESHOLD_DIST = 0.05  ! Допуск отклонения от радиуса (5%)
+
+
+
+
+
+
+! ! Коэффициенты для 7-точечного сглаживания внутренних узлов (можно менять)
+! W_CENTER = 7      ! Вес центрального узла
+! W_1 = 6           ! Вес для соседей ±1
+! W_2 = 3           ! Вес для соседей ±2 
+! W_3 = -2          ! Вес для соседей ±3
+! DENOM = 21        ! Знаменатель
+
+! Коэффициенты для 7-точечного сглаживания внутренних узлов (можно менять)
+W_CENTER = 4      ! Вес центрального узла
+W_1 = 8           ! Вес для соседей ±1
+W_2 = 4            ! Вес для соседей ±2 
+W_3 = -3          ! Вес для соседей ±3
+DENOM = W_CENTER+ 2*W_1 + 2*W_2 + 2*W_3 ! Знаменатель
+
+
+! Сглаживание первых 3 узлов
+W1_0 = 30!39    ! Вес для узла 1 (центральный)
+W1_1 = 10!8     ! Вес для узла 1 (сосед 1)
+W1_2 = -4    ! Вес для узла 1 (сосед 2)
+W1_3 = -7    ! Вес для узла 1 (сосед 3)
+W1_4 = 4     ! Вес для узла 1 (сосед 4)
+DENOM1 = W1_0 + W1_1 + W1_2 + W1_3 + W1_4  ! Знаменатель для узла 1
+
+W2_0 = 8     ! Вес для узла 2 (центральный)
+W2_1 = 19    ! Вес для узла 2 (сосед 1)
+W2_2 = 16    ! Вес для узла 2 (сосед 2)
+W2_3 = 6     ! Вес для узла 2 (сосед 3)
+W2_4 = -4    ! Вес для узла 2 (сосед 4)
+W2_5 = 1     ! Вес для узла 2 (сосед 5)
+W2_6 = -2    ! Вес для узла 2 (сосед 6)
+DENOM2 = W2_0 + W2_1 + W2_2 + W2_3 + W2_4 + W2_5 + W2_6  ! Знаменатель для узла 2
+
+W3_0 = -4    ! Вес для узла 3 (центральный)
+W3_1 = 16    ! Вес для узла 3 (сосед 1)
+W3_2 = 19    ! Вес для узла 3 (сосед 2)
+W3_3 = 12    ! Вес для узла 3 (сосед 3)
+W3_4 = 2     ! Вес для узла 3 (сосед 4)
+W3_5 = -4    ! Вес для узла 3 (сосед 5)
+W3_6 = 1     ! Вес для узла 3 (сосед 6)
+DENOM3 = W3_0 + W3_1 + W3_2 + W3_3 + W3_4 + W3_5 + W3_6    ! Знаменатель для узла 3
+
+
+
+
+! Коэффициенты для последних 3 узлов (можно менять)
+! Узел N_NODE-2 (предпредпоследний)
+WN2_0 = 2! 1      ! Вес для N_NODE-6
+WN2_1 = -2!-4     ! Вес для N_NODE-5
+WN2_2 = 2      ! Вес для N_NODE-4
+WN2_3 = 12     ! Вес для N_NODE-3
+WN2_4 = 19     ! Вес для N_NODE-2 (центральный)
+WN2_5 = 16     ! Вес для N_NODE-1
+WN2_6 = -4     ! Вес для N_NODE
+DENOM_N2 = WN2_0 + WN2_1 + WN2_2 + WN2_3 + WN2_4 + WN2_5 + WN2_6  ! Знаменатель
+
+! Узел N_NODE-1 (предпоследний)
+WN1_0 = 4      ! Вес для N_NODE-6
+WN1_1 = -7     ! Вес для N_NODE-5
+WN1_2 = -4     ! Вес для N_NODE-4
+WN1_3 = 6      ! Вес для N_NODE-3
+WN1_4 = 16     ! Вес для N_NODE-2
+WN1_5 = 19     ! Вес для N_NODE-1 (центральный)
+WN1_6 = 8      ! Вес для N_NODE
+DENOM_N1 = WN1_0 + WN1_1 + WN1_2 + WN1_3 + WN1_4 + WN1_5 +  WN1_6  ! Знаменатель
+
+! Узел N_NODE (последний)
+WN_0 = -6!-2      ! Вес для N_NODE-6
+WN_1 = 8!4       ! Вес для N_NODE-5
+WN_2 = 5!1       ! Вес для N_NODE-4
+WN_3 = -8!-4      ! Вес для N_NODE-3
+WN_4 = -8!-4      ! Вес для N_NODE-2
+WN_5 = 15!8       ! Вес для N_NODE-1
+WN_6 = 30!39      ! Вес для N_NODE (центральный)
+DENOM_N = WN_0 + WN_1 + WN_2 + WN_3 + WN_4 + WN_5 + WN_6   ! Знаменатель
+
+!===============================================файлы====================================
+
+/DELETE, D:\doubleside, txt
+
+*CREATE,ansuitmp15
+*CFOPEN, 'D:\doubleside', txt,,append
+*VWRITE,t1,DEPminthick,DEPmaxstress,Coordofmax,DEPmaxstressouter, Coordofmaxouter,kk,halfof,iniload,mi, , , ,, , , ,
+(10f10.4)
+*CFCLOS
+*END
+
+
+!==================массивы для задачи==================
+
+*DIM, lowcXcyl, array, elemcount+1, 3
+*DIM, lowcxstress, array, elemcount+1, 3
+*DIM, highcXcyl, array, elemcount+1, 3
+*DIM, highcxstress, array, elemcount+1, 3
+*DIM, lowcxcorrosion, array, elemcount+1, 3
+*DIM, highcxcorrosion, array, elemcount+1, 3
+*DIM, thickness, array, elemcount+1, 3
+
+
+!==================массивы для задачи==================
+
+
+*DO, i, 0, elemcount,1
+    lowcXcyl(i+1,1,1) = Pi/(2*elemcount)*i
+    lowcXcyl(i+1,2,1) = b+(R2-h)*COS(Pi/(2*elemcount)*i)
+    lowcXcyl(i+1,3,1) = (R2-h)*SIN( Pi/(2*elemcount)*i)
+    K,i+1, lowcXcyl(i+1,2,1), lowcXcyl(i+1,3,1), 0,
+*ENDDO 
+
+*DO, i, 1, elemcount,1
+    LSTR, i, i+1
+*ENDDO 
+
+
+*DO, i, 0, elemcount,1
+    highcXcyl(i+1,1,1) = Pi/(2*elemcount)*i
+    highcXcyl(i+1,2,1) = b+R2*COS(Pi/(2*elemcount)*i)
+    highcXcyl(i+1,3,1) = R2*SIN( Pi/(2*elemcount)*i)
+K,i+1+tn,highcXcyl(i+1,2,1),highcXcyl(i+1,3,1),0,
+*ENDDO 
+
+*DO, i, 0, elemcount, 1
+    thickness(i+1,1,1) = Pi/(2*elemcount)*i
+    thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+    thickness(i+1,3,1) = ((highcXcyl(i+1,2,1)-lowcXcyl(i+1,2,1))**2 + (highcXcyl(i+1,3,1)-lowcXcyl(i+1,3,1))**2)**0.5
+*ENDDO
+    
+*DO, i, 1, elemcount,1
+  LSTR, i+tn, i+1+tn
+*ENDDO
+
+
+LSTR, 1, 1+tn
+LSTR, elemcount+1, elemcount+1+tn
+
+*DO, i, 1, elemcount
+LESIZE,i, , ,1, , , , ,1
+*ENDDO
+*DO, i, elemcount+1, 2*elemcount
+LESIZE,i, , ,1, , , , ,1
+*ENDDO
+
+
+AL,ALL
+AMAP,1,1,elemcount+1,1001,elemcount+1000+1
+
+
+LOCAL,112,1,b,0,0, , , ,1,1,
+NROTAT,ALL
+LSCLEAR,ALL 
+
+*DO, i, 1, elemcount,1
+    SFL,i,PRES,pr,
+*ENDDO
+
+*DO, i, elemcount+1, elemcount+elemcount,1
+    SFL,i,PRES,po,
+*ENDDO
+
+CSYS,112
+DL,elemcount*2+1,1, UY, ,  
+DL,elemcount*2+2,1, UY, ,  
+
+
+CSYS,0 
+CSYS,112
+
+FINISH  
+/SOL
+!/STATUS,SOLU
+SOLVE
+/Post1
+RSYS,112
+
+LSEL, S, LINE,,1,elemcount
+NSLL, S, 1
+*GET,lownodemin,NODE,0,NUM,MIN
+*GET,lownodemax,NODE,0,NUM,MAX
+*GET, lowNodes, NODE, 0, COUNT 
+
+
+*DO, i, 1, lowNodes,1
+    *GET, lowcxstress(i,1,1), NODE, i, S,Y
+    lowcxstress(i,2,1) = Pi/(2*lowNodes)*(i-1)
+    
+    *IF, lowcxstress(i,1,1), LT, 0, THEN
+        lowcxstress(i,3,1)=-lowcxstress(i,1,1)
+        *ELSE
+        lowcxstress(i,3,1)=lowcxstress(i,1,1)
+    *ENDIF
+*ENDDO
+
+ALLSEL
+
+LSEL, S, LINE,,1+elemcount,2*elemcount
+NSLL, S, 1
+*GET, highNodes, NODE, 0, COUNT
+
+
+*DO, i, 1, highNodes,1
+  *GET, highcxstress(i,1,1), NODE, i, S,Y 
+  highcxstress(i,2,1) = Pi/(2*highNodes)*(i-1)
+
+  *IF, highcxstress(i,1,1), LT, 0, THEN
+      highcxstress(i,3,1)=-highcxstress(i,1,1)
+      *ELSE
+      highcxstress(i,3,1)=highcxstress(i,1,1)
+  *ENDIF
+*ENDDO   
+
+ALLSEL
+
+*DO, i, 1, lowNodes, 1
+  lowcxcorrosion(i,1,1) = Pi/(2*lowNodes)*(i-1)
+  lowcxcorrosion(i,2,1) = b+((R2-h)+(ai+(lowcxstress(i,3,1))*mi)*t1)*COS(Pi/(2*lowNodes)*(i-1))
+  lowcxcorrosion(i,3,1) = ((R2-h)+(ai+(lowcxstress(i,3,1))*mi)*t1)*SIN(Pi/(2*lowNodes)*(i-1))
+*ENDDO
+
+
+*DO, i, 1, highNodes, 1
+  highcxcorrosion(i,1,1) = Pi/(2*highNodes)*(i-1)
+  highcxcorrosion(i,2,1) = b+(R2-(ao+(highcxstress(i,3,1))*mo)*t1)*COS(Pi/(2*highNodes)*(i-1))
+  highcxcorrosion(i,3,1) = (R2-(ao+(highcxstress(i,3,1))*mo)*t1)*SIN(Pi/(2*highNodes)*(i-1))
+*ENDDO
+
+
+*DO, i, 0, elemcount, 1
+  thickness(i+1,1,1) = Pi/(2*elemcount)*i
+  thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+  thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
+*ENDDO
+
+LSEL, S, LINE,,1,elemcount
+NSLL, S, 1
+*GET,lownodemin,NODE,0,NUM,MIN
+*GET,lownodemax,NODE,0,NUM,MAX
+*GET, lowNodes, NODE, 0, COUNT 
+*DIM, DEFECTIVE, ARRAY, lowNodes 
+*DIM, Theta, ARRAY, lowNodes 
+*DIM, NODE_X, ARRAY, lowNodes 
+*DIM, NODE_Y, ARRAY, lowNodes
+*DIM, AB, ARRAY,lowNodes,4
+
+N_NODE=lowNodes
+
+*DO, I, 1, lowNodes
+
+  ! Координаты текущего узла
+  NODE_X(I) = lowcxcorrosion(i,2,1)
+  NODE_Y(I) = lowcxcorrosion(i,3,1)
+*ENDDO
+
+*DO, I, 1, lowNodes
+
+  ! Проверка угла (если не на границе)
+  *IF, I, GT, 1, AND, I, LT, lowNodes, THEN
+    ! Вектора a (P_i-1 -> P_i) и b (P_i -> P_i+1)
+    ! AX = lowcxcorrosion(i,2,1) - lowcxcorrosion(i-1,2,1)
+    ! AY = NODE_Y(i) - NODE_Y(i-1)
+    ! BX = lowcxcorrosion(i+1,2,1) - lowcxcorrosion(i,2,1)
+    ! BY = NODE_Y(i+1) - NODE_Y(i)
+
+    AB(I,1) = ABS(NODE_X(I) - NODE_X(i-1))
+    AB(I,2) = ABS(NODE_Y(I) - NODE_Y(i-1))
+    AB(I,3) = ABS(NODE_X(I+1) - NODE_X(i))
+    AB(I,4) = ABS(NODE_Y(I+1) - NODE_Y(i))    
+
+
+    ! Косинус угла
+    COS_THETA = (AB(I,1)*AB(I,3) + AB(I,2)*AB(I,4))/(SQRT(AB(I,1)**2 + AB(I,2)**2)*SQRT(AB(I,3)**2 + AB(I,4)**2))
+    THETA(I) = 180 - ACOS(COS_THETA)*180/Pi  ! В градусах
+
+    *IF, THETA(I), LT, THRESHOLD_ANGLE, THEN
+      DEFECTIVE(I) = 1  ! Пометить как дефектный
+    *ENDIF
+    
+  *ENDIF
+*ENDDO
+
+
+
+
+*DIM, Y_NEW_NEW, ARRAY, lowNodes
+*DIM, X_NEW_NEW, ARRAY, lowNodes
+
+! 3. Применение 7-точечного сглаживания ТОЛЬКО к дефектным узлам
+*DO, I, 4, lowNodes-3  ! Игнорируем граничные узлы
+
+  ! Координаты текущего узла
+  ! NODE_X(I) = lowcxcorrosion(i,2,1)
+  ! NODE_Y(I) = lowcxcorrosion(i,3,1)
+
+  *IF, DEFECTIVE(I), EQ, 1, THEN
+    ! Формула сглаживания с использованием коэффициентов
+    TERM1 = W_CENTER*NODE_Y(I)
+    TERM2 = W_1*(NODE_Y(I+1) + NODE_Y(I-1))
+    TERM3 = W_2*(NODE_Y(I+2) + NODE_Y(I-2)) 
+    TERM4 = W_3*(NODE_Y(I+3) + NODE_Y(I-3))
+    Y_NEW_NEW(I) = (TERM1 + TERM2 + TERM3 + TERM4)/DENOM
+
+    TERM1_X = W_CENTER*NODE_X(I)
+    TERM2_X = W_1*(NODE_X(I+1) + NODE_X(I-1))
+    TERM3_X = W_2*(NODE_X(I+2) + NODE_X(I-2)) 
+    TERM4_X = W_3*(NODE_X(I+3) + NODE_X(I-3))
+    X_NEW_NEW(I) = (TERM1_X + TERM2_X + TERM3_X + TERM4_X)/DENOM
+  *ELSE
+    Y_NEW_NEW(I) = NODE_Y(I)  ! Без изменений
+    X_NEW_NEW(I) = NODE_X(I)
+  *ENDIF
+*ENDDO
+
+! -----------------------------------------------
+! СГЛАЖИВАНИЕ КРАЕВЫХ УЗЛОВ (1, 2, 3)
+! -----------------------------------------------
+*IF, N_NODE, GE, 7, THEN  ! Проверка, что узлов достаточно
+  ! Узел 1
+  *IF, DEFECTIVE(1), EQ, 1, THEN
+    TERM1 = W1_0*NODE_Y(1) + W1_1*NODE_Y(2)
+    TERM2 = W1_2*(NODE_Y(3) + NODE_Y(4) - NODE_Y(5))
+    TERM3 = W1_3*NODE_Y(6) + W1_4*NODE_Y(7)
+    Y_NEW_NEW(1) = (TERM1 + TERM2 + TERM3)/DENOM1
+
+    TERM1_X = W1_0*NODE_X(1) + W1_1*NODE_X(2)
+    TERM2_X = W1_2*(NODE_X(3) + NODE_X(4) - NODE_X(5))
+    TERM3_X = W1_3*NODE_X(6) + W1_4*NODE_X(7)
+    X_NEW_NEW(1) = (TERM1_X + TERM2_X + TERM3_X)/DENOM1
+
+  *ELSE
+    Y_NEW_NEW(1) = NODE_Y(1)
+    X_NEW_NEW(1) = NODE_X(1)
+  *ENDIF
+  
+  ! Узел 2
+  *IF, DEFECTIVE(2), EQ, 1, THEN
+    TERM1 = W2_0*NODE_Y(1) + W2_1*NODE_Y(2)
+    TERM2 = W2_2*NODE_Y(3) + W2_3*NODE_Y(4)
+    TERM3 = W2_4*NODE_Y(5) + W2_5*NODE_Y(6) + W2_6*NODE_Y(7)
+    Y_NEW_NEW(2) = (TERM1 + TERM2 + TERM3)/DENOM2
+
+
+    TERM1_XX = W2_0*NODE_X(1) + W2_1*NODE_X(2)
+    TERM2_XX = W2_2*NODE_X(3) + W2_3*NODE_X(4)
+    TERM3_XX = W2_4*NODE_X(5) + W2_5*NODE_X(6) + W2_6*NODE_X(7)
+    X_NEW_NEW(2) = (TERM1_XX + TERM2_XX + TERM3_XX)/DENOM2
+  *ELSE
+    Y_NEW_NEW(2) = NODE_Y(2)
+    X_NEW_NEW(2) = NODE_X(2)
+  *ENDIF
+  
+  ! Узел 3
+  *IF, DEFECTIVE(3), EQ, 1, THEN
+    TERM1 = W3_0*NODE_Y(1) + W3_1*NODE_Y(2) + W3_2*NODE_Y(3)
+    TERM2 = W3_3*NODE_Y(4) + W3_4*NODE_Y(5)
+    TERM3 = W3_5*NODE_Y(6) + W3_6*NODE_Y(7)
+    Y_NEW_NEW(3) = (TERM1 + TERM2 + TERM3)/DENOM3
+
+    TERM1_X = W3_0*NODE_X(1) + W3_1*NODE_X(2) + W3_2*NODE_X(3)
+    TERM2_X = W3_3*NODE_X(4) + W3_4*NODE_X(5)
+    TERM3_X = W3_5*NODE_X(6) + W3_6*NODE_X(7)
+    X_NEW_NEW(3) = (TERM1_X + TERM2_X + TERM3_X)/DENOM3
+  *ELSE
+    Y_NEW_NEW(3) = NODE_Y(3)
+    X_NEW_NEW(3) = NODE_X(3)
+  *ENDIF
+*ENDIF
+
+! -----------------------------------------------
+! СГЛАЖИВАНИЕ ПОСЛЕДНИХ ТРЕХ УЗЛОВ
+! -----------------------------------------------
+*IF, N_NODE, GE, 7, THEN
+  ! Узел N_NODE-2
+  *IF, DEFECTIVE(N_NODE-2), EQ, 1, THEN
+    TERM1 = WN2_0*NODE_Y(N_NODE-6) + WN2_1*NODE_Y(N_NODE-5)
+    TERM2 = WN2_2*NODE_Y(N_NODE-4) + WN2_3*NODE_Y(N_NODE-3)
+    TERM3 = WN2_4*NODE_Y(N_NODE-2) + WN2_5*NODE_Y(N_NODE-1)
+    TERM4 = WN2_6*NODE_Y(N_NODE)
+    Y_NEW_NEW(N_NODE-2) = (TERM1 + TERM2 + TERM3 + TERM4)/DENOM_N2
+
+
+    TERM1_X = WN2_0*NODE_X(N_NODE-6) + WN2_1*NODE_X(N_NODE-5)
+    TERM2_X = WN2_2*NODE_X(N_NODE-4) + WN2_3*NODE_X(N_NODE-3)
+    TERM3_X = WN2_4*NODE_X(N_NODE-2) + WN2_5*NODE_X(N_NODE-1)
+    TERM4_X = WN2_6*NODE_X(N_NODE)
+    X_NEW_NEW(N_NODE-2) = (TERM1_X + TERM2_X + TERM3_X + TERM4_X)/DENOM_N2
+  *ELSE
+    Y_NEW_NEW(N_NODE-2) = NODE_Y(N_NODE-2)
+    X_NEW_NEW(N_NODE-2)=  lowcxcorrosion(N_NODE-2,2,1)
+  *ENDIF
+  
+  ! Узел N_NODE-1
+  *IF, DEFECTIVE(N_NODE-1), EQ, 1, THEN
+    TERM1 = WN1_0*NODE_Y(N_NODE-6) + WN1_1*NODE_Y(N_NODE-5)
+    TERM2 = WN1_2*NODE_Y(N_NODE-4) + WN1_3*NODE_Y(N_NODE-3)
+    TERM3 = WN1_4*NODE_Y(N_NODE-2) + WN1_5*NODE_Y(N_NODE-1)
+    TERM4 = WN1_6*NODE_Y(N_NODE)
+    Y_NEW_NEW(N_NODE-1) = (TERM1 + TERM2 + TERM3 + TERM4)/DENOM_N1
+
+    TERM1_X = WN1_0*NODE_X(N_NODE-6) + WN1_1*NODE_X(N_NODE-5)
+    TERM2_X = WN1_2*NODE_X(N_NODE-4) + WN1_3*NODE_X(N_NODE-3)
+    TERM3_X = WN1_4*NODE_X(N_NODE-2) + WN1_5*NODE_X(N_NODE-1)
+    TERM4_X = WN1_6*NODE_X(N_NODE)
+    X_NEW_NEW(N_NODE-1) = (TERM1_X + TERM2_X + TERM3_X + TERM4_X)/DENOM_N1
+
+
+  *ELSE
+    Y_NEW_NEW(N_NODE-1) = NODE_Y(N_NODE-1)
+    X_NEW_NEW(N_NODE-1)=  lowcxcorrosion(N_NODE-1,2,1)
+  *ENDIF
+  
+  ! Узел N_NODE
+  *IF, DEFECTIVE(N_NODE), EQ, 1, THEN
+    TERM1 = WN_0*NODE_Y(N_NODE-6) + WN_1*NODE_Y(N_NODE-5)
+    TERM2 = WN_2*NODE_Y(N_NODE-4) + WN_3*NODE_Y(N_NODE-3)
+    TERM3 = WN_4*NODE_Y(N_NODE-2) + WN_5*NODE_Y(N_NODE-1)
+    TERM4 = WN_6*NODE_Y(N_NODE)
+    Y_NEW_NEW(N_NODE) = (TERM1 + TERM2 + TERM3 + TERM4)/DENOM_N
+
+
+    TERM1_X = WN_0*NODE_X(N_NODE-6) + WN_1*NODE_X(N_NODE-5)
+    TERM2_X = WN_2*NODE_X(N_NODE-4) + WN_3*NODE_X(N_NODE-3)
+    TERM3_X = WN_4*NODE_X(N_NODE-2) + WN_5*NODE_X(N_NODE-1)
+    TERM4_X = WN_6*NODE_X(N_NODE)
+    X_NEW_NEW(N_NODE) = (TERM1_X + TERM2_X + TERM3_X + TERM4_X)/DENOM_N
+
+  *ELSE
+    Y_NEW_NEW(N_NODE) = NODE_Y(N_NODE)
+    X_NEW_NEW(N_NODE)=  lowcxcorrosion(N_NODE,2,1)
+  *ENDIF
+*ENDIF
+
+NSEL,ALL
+!NSLK,S
+!*GET,addcount,NODE,0,COUNT
+
+!NSEL,S, NODE, ,1,elemcount+1
+!/output,comp1_output,txt ! redirect output to a file called "comp1_output.txt"
+!PRNSOL,,S,Y
+!
+h2=h*0.1 !определение критической толщины
+*VSCFUN, initialstress, MAX, lowcxstress(1,1)
+
+
+!====================================== ВРЕМЕННОЙ ЦИКЛ ========================================
+
+  *DO, t1, 0, 100, timesize
+
+    /POST1
+    RSYS,112
+    CSYS,112
+
+
+    LSEL, S, LINE,,1,elemcount
+    NSLL, S, 1
+    *GET,lownodemin,NODE,0,NUM,MIN
+    *GET,lownodemax,NODE,0,NUM,MAX
+    *GET, lowNodes, NODE, 0, COUNT 
+
+
+    *DO, i, 1, lowNodes,1
+        *GET, lowcxstress(i,1,1), NODE, i, S,Y
+        lowcxstress(i,2,1) = Pi/(2*lowNodes)*(i-1)
+        
+        *IF, lowcxstress(i,1,1), LT, 0, THEN
+            lowcxstress(i,3,1)=-lowcxstress(i,1,1)
+            *ELSE
+            lowcxstress(i,3,1)=lowcxstress(i,1,1)
+        *ENDIF
+    *ENDDO
+
+    ALLSEL
+
+    LSEL, S, LINE,,1+elemcount,2*elemcount
+    NSLL, S, 1
+    *GET, highNodes, NODE, 0, COUNT
+
+
+    *DO, i, 1, highNodes,1
+    *GET, highcxstress(i,1,1), NODE, i, S,Y 
+    highcxstress(i,2,1) = Pi/(2*lowNodes)*(i-1)
+
+    *IF, highcxstress(i,1,1), LT, 0, THEN
+        highcxstress(i,3,1)=-highcxstress(i,1,1)
+        *ELSE
+        highcxstress(i,3,1)=highcxstress(i,1,1)
+    *ENDIF
+    *ENDDO   
+
+    ALLSEL
+
+    *DO, i, 1, lowNodes, 1
+    lowcxcorrosion(i,1,1) = Pi/(2*lowNodes)*(i-1)
+    lowcxcorrosion(i,2,1) = b+((R2-h)+(ai+(lowcxstress(i,3,1))*mi)*t1)*COS(Pi/(2*lowNodes)*(i-1))
+    lowcxcorrosion(i,3,1) = ((R2-h)+(ai+(lowcxstress(i,3,1))*mi)*t1)*SIN(Pi/(2*lowNodes)*(i-1))
+    *ENDDO
+
+
+    *DO, i, 1, highNodes, 1
+    highcxcorrosion(i,1,1) = Pi/(2*highNodes)*(i-1)
+    highcxcorrosion(i,2,1) = b+(R2-(ao+(highcxstress(i,3,1))*mo)*t1)*COS(Pi/(2*highNodes)*(i-1))
+    highcxcorrosion(i,3,1) = (R2-(ao+(highcxstress(i,3,1))*mo)*t1)*SIN(Pi/(2*highNodes)*(i-1))
+    *ENDDO
+
+
+    *DO, i, 0, elemcount, 1
+    thickness(i+1,1,1) = Pi/(2*elemcount)*i
+    thickness(i+1,2,1) = thickness(i+1,1,1)/Pi*180
+    thickness(i+1,3,1) = ((highcxcorrosion(i+1,2,1)-lowcxcorrosion(i+1,2,1))**2 + (highcxcorrosion(i+1,3,1)-lowcxcorrosion(i+1,3,1))**2)**0.5
+    *ENDDO
+
+
+    *IF, t1, EQ, 0, THEN
+
+      /Post1
+      RSYS,112
+      CSYS,112
+      /EFACET,1   
+      PLNSOL, S, Y, 2, 5.0   
+
+      !SCREENSHOT
+      !*
+      !*
+      /RGB,INDEX,100,100,100, 0   
+      /RGB,INDEX, 80, 80, 80,13   
+      /RGB,INDEX, 60, 60, 60,14   
+      /RGB,INDEX, 0, 0, 0,15  
+      /SHOW,PNG,,0
+      PNGR,COMP,1,-1  
+      PNGR,ORIENT,HORIZ   
+      PNGR,COLOR,2
+      PNGR,TMOD,1 
+      /GFILE,1600, 
+      !*
+      !*
+      /REPLOT 
+      /SHOW,CLOSE 
+      /DEVICE,VECTOR,0
+      !*
+      !*
+      !END OF SCREENSHOT
+    *ENDIF
+
+    *DO, W, 1, 100, 0.2
+      *IF, t1, EQ, W, THEN
+        /Post1
+        RSYS,112
+        CSYS,112
+        /Post1
+        /EFACET,1   
+        PLNSOL, S, Y, 0, 5.0   
+
+        !SCREENSHOT
+        !*
+        !*
+        /RGB,INDEX,100,100,100, 0   
+        /RGB,INDEX, 80, 80, 80,13   
+        /RGB,INDEX, 60, 60, 60,14   
+        /RGB,INDEX, 0, 0, 0,15  
+        /SHOW,PNG,,0
+        PNGR,COMP,1,-1  
+        PNGR,ORIENT,HORIZ   
+        PNGR,COLOR,2
+        PNGR,TMOD,1 
+        /GFILE,1600, 
+        !*
+        !*
+        /REPLOT 
+        /SHOW,CLOSE 
+        /DEVICE,VECTOR,0
+        !*
+        !*
+        !END OF SCREENSHOT
+      *ENDIF
+    *ENDDO
+
+    LSEL, S, LINE,,1,elemcount
+    NSLL, S, 1
+    *GET,lownodemin,NODE,0,NUM,MIN
+    *GET,lownodemax,NODE,0,NUM,MAX
+    *GET, lowNodes, NODE, 0, COUNT 
+    !*DIM, DEFECTIVE, ARRAY, lowNodes 
+
+
+    *DO, I, 1, lowNodes
+
+      ! Координаты текущего узла
+      NODE_X(I) = lowcxcorrosion(i,2,1)
+      NODE_Y(I) = lowcxcorrosion(i,3,1)
+    *ENDDO
+
+    *DO, I, 1, lowNodes
+
+      ! Проверка угла (если не на границе)
+      *IF, I, GT, 1, AND, I, LT, lowNodes, THEN
+        ! Вектора a (P_i-1 -> P_i) и b (P_i -> P_i+1)
+        ! AX = lowcxcorrosion(i,2,1) - lowcxcorrosion(i-1,2,1)
+        ! AY = NODE_Y(i) - NODE_Y(i-1)
+        ! BX = lowcxcorrosion(i+1,2,1) - lowcxcorrosion(i,2,1)
+        ! BY = NODE_Y(i+1) - NODE_Y(i)
+
+        AB(I,1) = ABS(NODE_X(I) - NODE_X(i-1))
+        AB(I,2) = ABS(NODE_Y(I) - NODE_Y(i-1))
+        AB(I,3) = ABS(NODE_X(I+1) - NODE_X(i))
+        AB(I,4) = ABS(NODE_Y(I+1) - NODE_Y(i))    
+
+
+        ! Косинус угла
+        COS_THETA = (AB(I,1)*AB(I,3) + AB(I,2)*AB(I,4))/(SQRT(AB(I,1)**2 + AB(I,2)**2)*SQRT(AB(I,3)**2 + AB(I,4)**2))
+        THETA(I) = 180 - ACOS(COS_THETA)*180/Pi  ! В градусах
+
+        *IF, THETA(I), LT, THRESHOLD_ANGLE, THEN
+          DEFECTIVE(I) = 1  ! Пометить как дефектный
+        *ENDIF
+        
+      *ENDIF
+    *ENDDO
+
+
+
+    ! 3. Применение 7-точечного сглаживания ТОЛЬКО к дефектным узлам
+    *DO, I, 4, lowNodes-3  ! Игнорируем граничные узлы
+
+      ! Координаты текущего узла
+      ! NODE_X(I) = lowcxcorrosion(i,2,1)
+      ! NODE_Y(I) = lowcxcorrosion(i,3,1)
+
+      *IF, DEFECTIVE(I), EQ, 1, THEN
+        ! Формула сглаживания с использованием коэффициентов
+        TERM1 = W_CENTER*NODE_Y(I)
+        TERM2 = W_1*(NODE_Y(I+1) + NODE_Y(I-1))
+        TERM3 = W_2*(NODE_Y(I+2) + NODE_Y(I-2)) 
+        TERM4 = W_3*(NODE_Y(I+3) + NODE_Y(I-3))
+        Y_NEW_NEW(I) = (TERM1 + TERM2 + TERM3 + TERM4)/DENOM
+
+        TERM1_X = W_CENTER*NODE_X(I)
+        TERM2_X = W_1*(NODE_X(I+1) + NODE_X(I-1))
+        TERM3_X = W_2*(NODE_X(I+2) + NODE_X(I-2)) 
+        TERM4_X = W_3*(NODE_X(I+3) + NODE_X(I-3))
+        X_NEW_NEW(I) = (TERM1_X + TERM2_X + TERM3_X + TERM4_X)/DENOM
+      *ELSE
+        Y_NEW_NEW(I) = NODE_Y(I)  ! Без изменений
+        X_NEW_NEW(I) = NODE_X(I)
+      *ENDIF
+    *ENDDO
+
+    ! -----------------------------------------------
+    ! СГЛАЖИВАНИЕ КРАЕВЫХ УЗЛОВ (1, 2, 3)
+    ! -----------------------------------------------
+    *IF, N_NODE, GE, 7, THEN  ! Проверка, что узлов достаточно
+      ! Узел 1
+      *IF, DEFECTIVE(1), EQ, 1, THEN
+        TERM1 = W1_0*NODE_Y(1) + W1_1*NODE_Y(2)
+        TERM2 = W1_2*(NODE_Y(3) + NODE_Y(4) - NODE_Y(5))
+        TERM3 = W1_3*NODE_Y(6) + W1_4*NODE_Y(7)
+        Y_NEW_NEW(1) = (TERM1 + TERM2 + TERM3)/DENOM1
+
+        TERM1_X = W1_0*NODE_X(1) + W1_1*NODE_X(2)
+        TERM2_X = W1_2*(NODE_X(3) + NODE_X(4) - NODE_X(5))
+        TERM3_X = W1_3*NODE_X(6) + W1_4*NODE_X(7)
+        X_NEW_NEW(1) = (TERM1_X + TERM2_X + TERM3_X)/DENOM1
+
+      *ELSE
+        Y_NEW_NEW(1) = NODE_Y(1)
+        X_NEW_NEW(1) = NODE_X(1)
+      *ENDIF
+      
+      ! Узел 2
+      *IF, DEFECTIVE(2), EQ, 1, THEN
+        TERM1 = W2_0*NODE_Y(1) + W2_1*NODE_Y(2)
+        TERM2 = W2_2*NODE_Y(3) + W2_3*NODE_Y(4)
+        TERM3 = W2_4*NODE_Y(5) + W2_5*NODE_Y(6) + W2_6*NODE_Y(7)
+        Y_NEW_NEW(2) = (TERM1 + TERM2 + TERM3)/DENOM2
+
+
+        TERM1_XX = W2_0*NODE_X(1) + W2_1*NODE_X(2)
+        TERM2_XX = W2_2*NODE_X(3) + W2_3*NODE_X(4)
+        TERM3_XX = W2_4*NODE_X(5) + W2_5*NODE_X(6) + W2_6*NODE_X(7)
+        X_NEW_NEW(2) = (TERM1_XX + TERM2_XX + TERM3_XX)/DENOM2
+      *ELSE
+        Y_NEW_NEW(2) = NODE_Y(2)
+        X_NEW_NEW(2) = NODE_X(2)
+      *ENDIF
+      
+      ! Узел 3
+      *IF, DEFECTIVE(3), EQ, 1, THEN
+        TERM1 = W3_0*NODE_Y(1) + W3_1*NODE_Y(2) + W3_2*NODE_Y(3)
+        TERM2 = W3_3*NODE_Y(4) + W3_4*NODE_Y(5)
+        TERM3 = W3_5*NODE_Y(6) + W3_6*NODE_Y(7)
+        Y_NEW_NEW(3) = (TERM1 + TERM2 + TERM3)/DENOM3
+
+        TERM1_X = W3_0*NODE_X(1) + W3_1*NODE_X(2) + W3_2*NODE_X(3)
+        TERM2_X = W3_3*NODE_X(4) + W3_4*NODE_X(5)
+        TERM3_X = W3_5*NODE_X(6) + W3_6*NODE_X(7)
+        X_NEW_NEW(3) = (TERM1_X + TERM2_X + TERM3_X)/DENOM3
+      *ELSE
+        Y_NEW_NEW(3) = NODE_Y(3)
+        X_NEW_NEW(3) = NODE_X(3)
+      *ENDIF
+    *ENDIF
+
+    ! -----------------------------------------------
+    ! СГЛАЖИВАНИЕ ПОСЛЕДНИХ ТРЕХ УЗЛОВ
+    ! -----------------------------------------------
+    *IF, N_NODE, GE, 7, THEN
+      ! Узел N_NODE-2
+      *IF, DEFECTIVE(N_NODE-2), EQ, 1, THEN
+        TERM1 = WN2_0*NODE_Y(N_NODE-6) + WN2_1*NODE_Y(N_NODE-5)
+        TERM2 = WN2_2*NODE_Y(N_NODE-4) + WN2_3*NODE_Y(N_NODE-3)
+        TERM3 = WN2_4*NODE_Y(N_NODE-2) + WN2_5*NODE_Y(N_NODE-1)
+        TERM4 = WN2_6*NODE_Y(N_NODE)
+        Y_NEW_NEW(N_NODE-2) = (TERM1 + TERM2 + TERM3 + TERM4)/DENOM_N2
+
+
+        TERM1_X = WN2_0*NODE_X(N_NODE-6) + WN2_1*NODE_X(N_NODE-5)
+        TERM2_X = WN2_2*NODE_X(N_NODE-4) + WN2_3*NODE_X(N_NODE-3)
+        TERM3_X = WN2_4*NODE_X(N_NODE-2) + WN2_5*NODE_X(N_NODE-1)
+        TERM4_X = WN2_6*NODE_X(N_NODE)
+        X_NEW_NEW(N_NODE-2) = (TERM1_X + TERM2_X + TERM3_X + TERM4_X)/DENOM_N2
+      *ELSE
+        Y_NEW_NEW(N_NODE-2) = NODE_Y(N_NODE-2)
+        X_NEW_NEW(N_NODE-2)=  lowcxcorrosion(N_NODE-2,2,1)
+      *ENDIF
+      
+      ! Узел N_NODE-1
+      *IF, DEFECTIVE(N_NODE-1), EQ, 1, THEN
+        TERM1 = WN1_0*NODE_Y(N_NODE-6) + WN1_1*NODE_Y(N_NODE-5)
+        TERM2 = WN1_2*NODE_Y(N_NODE-4) + WN1_3*NODE_Y(N_NODE-3)
+        TERM3 = WN1_4*NODE_Y(N_NODE-2) + WN1_5*NODE_Y(N_NODE-1)
+        TERM4 = WN1_6*NODE_Y(N_NODE)
+        Y_NEW_NEW(N_NODE-1) = (TERM1 + TERM2 + TERM3 + TERM4)/DENOM_N1
+
+        TERM1_X = WN1_0*NODE_X(N_NODE-6) + WN1_1*NODE_X(N_NODE-5)
+        TERM2_X = WN1_2*NODE_X(N_NODE-4) + WN1_3*NODE_X(N_NODE-3)
+        TERM3_X = WN1_4*NODE_X(N_NODE-2) + WN1_5*NODE_X(N_NODE-1)
+        TERM4_X = WN1_6*NODE_X(N_NODE)
+        X_NEW_NEW(N_NODE-1) = (TERM1_X + TERM2_X + TERM3_X + TERM4_X)/DENOM_N1
+
+
+      *ELSE
+        Y_NEW_NEW(N_NODE-1) = NODE_Y(N_NODE-1)
+        X_NEW_NEW(N_NODE-1)=  lowcxcorrosion(N_NODE-1,2,1)
+      *ENDIF
+      
+      ! Узел N_NODE
+      *IF, DEFECTIVE(N_NODE), EQ, 1, THEN
+        TERM1 = WN_0*NODE_Y(N_NODE-6) + WN_1*NODE_Y(N_NODE-5)
+        TERM2 = WN_2*NODE_Y(N_NODE-4) + WN_3*NODE_Y(N_NODE-3)
+        TERM3 = WN_4*NODE_Y(N_NODE-2) + WN_5*NODE_Y(N_NODE-1)
+        TERM4 = WN_6*NODE_Y(N_NODE)
+        Y_NEW_NEW(N_NODE) = (TERM1 + TERM2 + TERM3 + TERM4)/DENOM_N
+
+
+        TERM1_X = WN_0*NODE_X(N_NODE-6) + WN_1*NODE_X(N_NODE-5)
+        TERM2_X = WN_2*NODE_X(N_NODE-4) + WN_3*NODE_X(N_NODE-3)
+        TERM3_X = WN_4*NODE_X(N_NODE-2) + WN_5*NODE_X(N_NODE-1)
+        TERM4_X = WN_6*NODE_X(N_NODE)
+        X_NEW_NEW(N_NODE) = (TERM1_X + TERM2_X + TERM3_X + TERM4_X)/DENOM_N
+
+      *ELSE
+        Y_NEW_NEW(N_NODE) = NODE_Y(N_NODE)
+        X_NEW_NEW(N_NODE)=  lowcxcorrosion(N_NODE,2,1)
+      *ENDIF
+    *ENDIF
+
+    NSEL,ALL
+    !удаляем старое и перестраиваем
+    ALLSEL  
+    /PREP7
+    !CEDELE,ALL
+    ACLEAR,1
+    !EDELE,ALL
+    !NDELE,ALL
+    ADELE, ALL
+    LDELE,All
+    KDELE,All
+    CSYS,0 
+
+    *DO, i, 0, elemcount,1
+      K,i+1,X_NEW_NEW(i+1), Y_NEW_NEW(i+1),0,
+    *ENDDO
+
+    *DO, i, 1, elemcount,1
+      LSTR, i, i+1
+    *ENDDO
+
+    *DO, i, 0, elemcount,1
+      K,i+tn+1,highcxcorrosion(i+1,2,1),highcxcorrosion(i+1,3,1),0,
+    *ENDDO
+
+
+    *DO, i, 1, elemcount,1
+      LSTR, i+tn, i+1+tn
+    *ENDDO
+
+
+    LSTR, 1, 1+tn
+    LSTR, elemcount+1, elemcount+1+tn
+
+    *DO, i, 1, elemcount
+      LESIZE,i, , ,1, , , , ,1
+    *ENDDO
+    *DO, i, elemcount+1, 2*elemcount
+      LESIZE,i, , ,1, , , , ,1
+    *ENDDO
+
+
+
+    AL,ALL
+    AMAP,1,1,elemcount+1,1001,elemcount+1000+1
+    !AESIZE, 1, meshsize,
+    !AMESH,1
+    !граничные условия в цилиндрической системе
+
+    LOCAL,112,1,b,0,0, , , ,1,1,
+    NROTAT,ALL
+    LSCLEAR,ALL 
+
+    *DO, i, 1, elemcount,1
+      SFL,i,PRES,pr,
+    *ENDDO
+
+    *DO, i, elemcount+1, elemcount+elemcount,1
+      SFL,i,PRES,po,
+    *ENDDO
+    CSYS,112 
+    DL,elemcount*2+1,1, UY, ,  
+    DL,elemcount*2+2,1, UY, ,  
+
+
+    !CSYS,0 
+    !CSYS,112
+    !RSYS,112
+    !переходим в обычную СК и решаем
+
+    CSYS,0 
+    FINISH  
+    /SOL
+    SOLVE
+
+    !результаты (время, максимальное напряжение в узле, координата узла, минимальная толщина в узле)
+
+    !массивы для расчета напряжений
+    *VSCFUN, DEPmaxstress, MAX, lowcxstress(1,3)
+    *VSCFUN, DEPmaxstressouter, MAX, highcxstress(1,3)
+
+    !max напряжения на внутренней поверхности
+    *VSCFUN, locstress, LMAX, lowcxstress(1,3)
+    Coordofmax = lowcxstress(locstress,2)*180/Pi
+
+    !max напряжения на внешней поверхности
+    *VSCFUN, locstressouter, LMAX, highcxstress(1,3)
+    Coordofmaxouter = highcxstress(locstressouter,2)*180/Pi   
+
+    !расчет толщины
+    *VSCFUN, DEPminthick, MIN, thickness(1,3)
+    *VSCFUN, locminthick, LMIN, thickness(1,3)
+    Coordofminthick = thickness(locminthick,2)
+    *VSCFUN, DEPmaxthick, MAX, thickness(1,3)
+    halfof=(DEPmaxstress-initialstress)/(smax-initialstress)
+
+
+    *use, ansuitmp15
+
+    !*ENDIF
+    *IF, DEPmaxstress,GT,smax,EXIT
+    *IF, DEPminthick,LT,0,EXIT
+
+  *ENDDO
+
+
+
+
+
